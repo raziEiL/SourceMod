@@ -6,7 +6,7 @@
 
 public Plugin:myinfo =
 {
-	name = "[L4D & L4D2] Simple Afk Manager",
+	name = "[L4D & L4D2] Simple AFK Manager",
 	author = "raziEiL [disawar1]",
 	description = "Afk manager for cooperative gamemode",
 	version = PLUGIN_VERSION,
