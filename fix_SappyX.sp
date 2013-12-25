@@ -143,15 +143,16 @@ public OnPluginStart()
 	HookConVarChange(g_hModel, OnCVarChange);
 	GetCVars();
 
-	#if debug
+	//#if debug
 	RegAdminCmd("fx", CmdFix, ADMFLAG_ROOT);
-	#endif
+	//#endif
 }
 
-#if debug
+//#if debug
 /* * * Test Command * * */
 public Action:CmdFix(client, args)
 {
+	/*
 	new entity = -1;
 
 	for (new i = 1; i <= MaxClients; i++){
@@ -164,11 +165,11 @@ public Action:CmdFix(client, args)
 		PrintToChatAll("ghost ent <%d>", entity);
 
 	//GetClientOfUserId(GetEntProp(i, Prop_Send, "m_humanSpectatorUserID"))
-
+	*/
 	CreateTimer(0.0, SappyFix, -3);
 	return Plugin_Handled;
 }
-#endif
+//#endif
 
 public OnMapStart()
 {

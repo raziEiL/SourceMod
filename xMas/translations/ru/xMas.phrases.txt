@@ -1,0 +1,81 @@
+//  = 0x01 (SOH) - Use normal color from this point forward
+//  = 0x02 (STX) - Use team color up to the end of the player name
+//  = 0x03 (ETX) - Use team color from this point forward
+//  = 0x04 (EOT) - Use location color from this point forward 
+//  = 0x05 (ENQ) - Use achievement color from this point forward
+
+"Phrases"
+{
+	"xMas1"
+	{
+		"ru"		"Счастливого %d года!"
+	}
+	"xMas2"
+	{
+		"ru"		"Я поздравляю всех с новым %d'ым годом!"
+	}
+	"xMas3"
+	{
+		"ru"		"Счастливого Нового Года!"
+	}
+	"xMas4"
+	{
+		"ru"		"Веселого Рождества и счастливого Нового Года!" 
+	}	
+	"xMas5"
+	{
+		"ru"		"Счастливого Вам Рождества!" 
+	}
+	"xMas6"
+	{
+		"ru"		"Яркого и радостного Рождества!" 
+	}
+	"xMas7"
+	{
+		"ru"		"Счастливого Рождества и процветания в Новом Году!" 
+	}	
+	"xMas8"
+	{
+		"ru"		"Поздравляю всех моих хороших друзей, и желаю мира и счастья в новом году"
+	}	
+	"xMas9"
+	{
+		"ru"		"Хo - Хо - Хо! :)"
+	}	
+	"xMas10"
+	{
+		"ru"		"ХОРОШИХ ПРАЗДНИКОВ ИГРОКИ L4D! - by raziEiL"
+	}	
+	"xMas11"
+	{
+		"ru"		"Желаю всех радостей, какие только может принести зима! Веселого Рождества!"
+	}
+	"xMas12"
+	{
+		"ru"		"будьте счастливы!"
+	}
+	"xMas Enable"
+	{
+		"ru"		"Музыка Включена."
+	}
+	"xMas Disable"
+	{
+		"ru"		"Музыка Выключена."
+	}
+	"xMas Msg"
+	{
+		"ru"		"Счастливого Рождества и с Новым Годом тебя!"
+	}
+	"xMas Limit"
+	{
+		"ru"		"Вы уже отправили Поздравительные Сообщения."
+	}
+	"zMas Help"
+	{
+		"ru"		"/xmas Имя \"Поздравление\". Пр: /xmas silv \"Yo man\""
+	}
+	"zMas Msg"
+	{
+		"ru"		"О-оу вас поздравил %N, напишите /xmas чтобы ответить."
+	}
+}
