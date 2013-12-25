@@ -51,7 +51,7 @@ public Plugin:myinfo =
 	author = "raziEiL [disawar1]",
 	description = "Welcome to the Tank Fight Club. Kill Them All!",
 	version = PLUGIN_VERSION,
-	url = "www.27days-support.at.ua"
+	url = "http://steamcommunity.com/id/raziEiL"
 }
 
 /*////////////////////////

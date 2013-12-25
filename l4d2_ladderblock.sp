@@ -147,7 +147,7 @@ ST_GetCvars()
 
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 {
-	if (GuessSDKVersion() != SOURCE_SDK_LEFT4DEAD2){
+	if (GetEngineVersion() != Engine_Left4Dead2){
 
 		strcopy(error, err_max, "Plugin only support L4D2 engine");
 		return APLRes_Failure;

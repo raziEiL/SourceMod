@@ -81,7 +81,7 @@ public Plugin:myinfo =
 	author = "raziEiL [disawar1]",
 	description = "The card game for man!",
 	version = PLUGIN_VERSION,
-	url = "l4d.darkmental.ru"
+	url = "http://steamcommunity.com/id/raziEiL"
 }
 
 /*=====================
