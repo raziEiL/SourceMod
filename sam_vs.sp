@@ -72,7 +72,7 @@ public OnPluginStart()
 				SetEngineTime(i);
 }
 
-public Action:SAM_ev_PlayerSay(Handle:event, String:event_name[], bool:dontBroadcast)
+public SAM_ev_PlayerSay(Handle:event, String:event_name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (!client) return;
@@ -183,7 +183,7 @@ public OnClientDisconnect(client)
 	}
 }
 
-public Action:SAM_ev_PlayerTeam(Handle:event, String:event_name[], bool:dontBroadcast)
+public SAM_ev_PlayerTeam(Handle:event, String:event_name[], bool:dontBroadcast)
 {
 	if (GetEventBool(event, "disconnect")) return;
 

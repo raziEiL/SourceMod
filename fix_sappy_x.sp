@@ -190,7 +190,7 @@ public OnMapStart()
 										|					(Saving Client Models) |
 										+==========================================+
 */
-public Action:MapTranslition(Handle:event, String:event_name[], bool:dontBroadcast)
+public MapTranslition(Handle:event, String:event_name[], bool:dontBroadcast)
 {
 	bMapChange = true;
 
@@ -276,7 +276,7 @@ ValidMap()
 										|							 (all gamemode)|
 										+==========================================+
 */
-public Action:PlayerIdle(Handle:event, String:event_name[], bool:dontBroadcast)
+public PlayerIdle(Handle:event, String:event_name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "player"));
 	new fake = GetClientOfUserId(GetEventInt(event, "bot"));
@@ -307,7 +307,7 @@ public Action:PlayerIdle(Handle:event, String:event_name[], bool:dontBroadcast)
 	}
 }
 
-public Action:PlayerBack(Handle:event, String:event_name[], bool:dontBroadcast)
+public PlayerBack(Handle:event, String:event_name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 
@@ -615,7 +615,7 @@ bool:IsEquipWeapon(iEnt)
 										|	 		Checking PART II   		(Timer)|
 										+------------------------------------------+
 */
-public Action:RoundStart(Handle:event, String:event_name[], bool:dontBroadcast)
+public RoundStart(Handle:event, String:event_name[], bool:dontBroadcast)
 {
 	#if debug
 		LogToFile(DEBUG, "%s ROUND START", FS);
@@ -688,7 +688,7 @@ ValidLimit()
 										|							 (all gamemode)|
 										+==========================================+
 */
-public Action:Event_PlayerDead(Handle:event, String:event_name[], bool:dontBroadcast)
+public Event_PlayerDead(Handle:event, String:event_name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 

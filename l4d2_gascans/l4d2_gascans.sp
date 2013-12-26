@@ -146,7 +146,7 @@ public Action:CmdGasCanLoad(client, agrs)
 											+==========================================+	
 */
 
-public Action:Event_GsScavengeIsReady(Handle:event, String:event_name[], bool:dontBroadcast)
+public Event_GsScavengeIsReady(Handle:event, String:event_name[], bool:dontBroadcast)
 {
 	if (bSkip) return;
 	
@@ -161,7 +161,7 @@ public Action:Event_GsScavengeIsReady(Handle:event, String:event_name[], bool:do
 	#endif
 }
 
-public Action:Event_GsPourCompleted(Handle:event, String:event_name[], bool:dontBroadcast)
+public Event_GsPourCompleted(Handle:event, String:event_name[], bool:dontBroadcast)
 {
 	if (++iGasCansPoured == iTotalCans){
 
@@ -177,7 +177,7 @@ public Action:Event_GsPourCompleted(Handle:event, String:event_name[], bool:dont
 	#endif
 }
 
-public Action:Event_GsRoundStart(Handle:event, String:event_name[], bool:dontBroadcast)
+public Event_GsRoundStart(Handle:event, String:event_name[], bool:dontBroadcast)
 {
 	#if debug
 		PrintToChatAll("[GS] Round start - reset all")

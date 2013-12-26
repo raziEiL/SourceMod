@@ -180,7 +180,7 @@ public OnClientPostAdminCheck(client)
 /*////////////////////////
 		= Event =
 *////////////////////////
-public Action:RoundStart(Handle:event, String:event_name[], bool:dontBroadcast)
+public RoundStart(Handle:event, String:event_name[], bool:dontBroadcast)
 {
 	if (g_CvarInfo == 1 || g_CvarInfo == 2 || g_CvarInfo == 3){
 		CPrintToChatAll("%s haha Tanks beat you? {olive}Table{default} of Fighting is:\n Tanks Today: {green}%d{default}\n Tanks Killed: {blue}%d{default}\n Last Round was: {olive}%d{default}\n ------", FC, TankALL, TankCount, n)
@@ -188,7 +188,7 @@ public Action:RoundStart(Handle:event, String:event_name[], bool:dontBroadcast)
 	ResetValues()
 }
 
-public Action:NewTank(Handle:event, const String:name[], bool:dontBroadcast)
+public NewTank(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (TankLive <= 10) //fixed bug *
 	TankLive++;
@@ -199,7 +199,7 @@ public Action:NewTank(Handle:event, const String:name[], bool:dontBroadcast)
 	CPrintToChatAll("%s WARNING! Reached the Maximum Tanks limit!", FC)
 }
 
-public Action:TankKilled(Handle:event, const String:name[], bool:dontBroadcast)
+public TankKilled(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (TankLive >= 1) //fixed bug *
 	TankLive--;
@@ -305,7 +305,7 @@ public Action:TankKilled(Handle:event, const String:name[], bool:dontBroadcast)
 	#endif
 }
 
-public Action:PanicEvent(Handle:event, const String:name[], bool:dontBroadcast)
+public PanicEvent(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (block == false && block3 == false){
 		#if debug

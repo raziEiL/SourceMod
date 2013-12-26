@@ -56,12 +56,12 @@ public Action:VPF_cmdh_Vote(client, const String:command[], argc)
 	return Plugin_Continue;
 }
 
-public Action:VPF_ev_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
+public VPF_ev_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	VPF_PrepareToFindVoteEnt();
 }
 
-public Action:VPF_ev_VoteStarted(Handle:event, const String:name[], bool:dontBroadcast)
+public VPF_ev_VoteStarted(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	VPF_PrepareToFix(GetEventInt(event, "team"), GetEventInt(event, "initiator"));
 }

@@ -51,7 +51,7 @@ public Action:OnPlayerRunCmd(client, &buttons)
 	}
 }
 
-public Action:WK_ev_PlayerJump(Handle:event, const String:name[], bool:dontBroadcast)
+public WK_ev_PlayerJump(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 
@@ -59,7 +59,7 @@ public Action:WK_ev_PlayerJump(Handle:event, const String:name[], bool:dontBroad
 		RunTrickChecking(client);
 }
 
-public Action:WK_ev_AbilityUse(Handle:event, const String:name[], bool:dontBroadcast)
+public WK_ev_AbilityUse(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 

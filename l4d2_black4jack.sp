@@ -71,7 +71,7 @@ new		Handle:MsgTimer[MAXPLAYERS + 1], Handle:g_BJbet, Handle:g_HpLimit, Handle:g
 new		playercard[MAXPLAYERS + 1],  dealer[MAXPLAYERS + 1], card, card2, PlayerHp, g_CvarBet, Hp,
 		g_CvarHpLimit, g_CvarChance, g_CvarHud, g_boomer;
 
-new		bool:pass[MAXPLAYERS + 1], bool:passblock[MAXPLAYERS + 1],  bool:dilerpass[MAXPLAYERS + 1], 
+new		bool:pass[MAXPLAYERS + 1], bool:passblock[MAXPLAYERS + 1],  bool:dilerpass[MAXPLAYERS + 1],
 		bool:hpblock[MAXPLAYERS + 1], bool:invite[MAXPLAYERS + 1], bool:incapblock[MAXPLAYERS + 1],
 		bool:ledgeblock[MAXPLAYERS + 1], bool:g_l4d1, bool:hook;
 
@@ -93,25 +93,25 @@ public OnPluginStart()
 	decl String:game[32];
 	GetGameFolderName(game, sizeof(game));
 	g_l4d1 = false;
-	if (StrEqual(game, "left4dead")) 
+	if (StrEqual(game, "left4dead"))
 			g_l4d1 = true;
-*/	
+*/
 	g_BJbet = CreateConVar("black_jack_bet", "10", "Player's bet in his health", FCVAR_PLUGIN);
 	g_HpLimit = CreateConVar("black_jack_health", "100", "You cannot Win more health than this limit!", FCVAR_PLUGIN);
 	g_Chance = CreateConVar("black_jack_chance", "50", "Chance to spawn witch or boomer when player lose", FCVAR_PLUGIN);
 	g_Hud = CreateConVar("black_jack_menu", "1", "Show BJ game menu to player", FCVAR_PLUGIN);
 	//AutoExecConfig(true, "l4d2_Black4Jack");
-	
+
 	HookConVarChange(g_BJbet, OnCVarChange);
 	HookConVarChange(g_HpLimit, OnCVarChange);
 	HookConVarChange(g_Chance, OnCVarChange);
 	HookConVarChange(g_Hud, OnCVarChange);
-	
+
 	HookEvent("player_incapacitated", BlackJackIncapLock);
 	HookEvent("revive_success", BlackJackIncapUnLock);
 	HookEvent("round_start", RoundStart);
 	HookEvent("player_ledge_grab", LedgeGrab);
-	
+
 	RegConsoleCmd("bj", CmdBlakJack, "Play Blackjack");
 	RegConsoleCmd("pass", CmdPass, "Blackjack Pass");
 	//RegConsoleCmd("invite", CmdInvite, "Play Blackjack with someone");
@@ -126,7 +126,7 @@ public OnMapStart()
 		PrecacheSound(Win1, true);
 		PrecacheSound(Push1, true);
 	}
-	else 
+	else
 	{
 		PrecacheSound(BlackJack, true);
 		PrecacheSound(Win, true);
@@ -155,7 +155,7 @@ public Action:Welcome(Handle:timer, any:client)
 	client = GetClientOfUserId(client);
 	if (client && IsClientInGame(client)  && GetClientTeam(client) != 3 && !IsFakeClient(client) && IsPlayerAlive(client))
 	{
-	
+
 		CPrintToChat(client, "%s You can win a prize! bet - {blue}%dhp{default}. Type {olive}!bj{default}, {olive}!invite{default} in chat.", FC, g_CvarBet);
 
 		#if debug
@@ -170,7 +170,7 @@ public Action:Welcome2(Handle:timer, any:client)
 	CPrintToChatAll("%s Welcome Message 2", TAG);
 	#endif
 	if (client && IsClientInGame(client)  && GetClientTeam(client) != 3 && !IsFakeClient(client) && IsPlayerAlive(client)){
-	
+
 		if (incapblock[client] == true || ledgeblock[client] == true)
 		{
 			CPrintToChat(client, "%s {blue}%N{default} you can help uself. Try to play BlackJack and win. Type {olive}!bj{default} in chat.", FC, client);
@@ -181,7 +181,7 @@ public Action:Welcome2(Handle:timer, any:client)
 /*=====================
 	  $ Events $
 =======================*/
-public Action:LedgeGrab(Handle:event, const String:name[], bool:dontBroadcast)
+public LedgeGrab(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	#if debug
 	CPrintToChatAll("%s LedgeGrab", TAG);
@@ -191,7 +191,7 @@ public Action:LedgeGrab(Handle:event, const String:name[], bool:dontBroadcast)
 	ledgeblock[client]=true;
 }
 
-public Action:BlackJackIncapLock(Handle:event, const String:name[], bool:dontBroadcast)
+public BlackJackIncapLock(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	#if debug
 	CPrintToChatAll("%s BlackJackIncapLock", TAG);
@@ -203,7 +203,7 @@ public Action:BlackJackIncapLock(Handle:event, const String:name[], bool:dontBro
 	GameisOver(client);
 }
 
-public Action:BlackJackIncapUnLock(Handle:event, const String:name[], bool:dontBroadcast)
+public BlackJackIncapUnLock(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	#if debug
 	CPrintToChatAll("%s BlackJackIncapUnLock", TAG);
@@ -214,7 +214,7 @@ public Action:BlackJackIncapUnLock(Handle:event, const String:name[], bool:dontB
 	GameisOver(client);
 }
 
-public Action:RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
+public RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	GameisOverForAll();
 }
@@ -236,10 +236,10 @@ bool:ICantPlay(client)
 		CPrintToChat(client, "%s {blue}%N{default} Not health - no game.", FC, client);
 		return true;
 	}
-	
+
 	// incap game
 	new IncapValue=g_CvarBet*3;
-	
+
 	if (PlayerHp <= IncapValue && hpblock[client] == false)
 	{
 		CPrintToChat(client, "%s {blue}%N{default} Not health - no game. incap", FC, client);
@@ -253,7 +253,7 @@ bool:BlackAndWhite(client)
 	if (ledgeblock[client] == true) return true;
 	new offset = FindSendPropInfo("CTerrorPlayer", "m_currentReviveCount");
 	new x = GetEntData(client, offset, 1);
-	if (x == 0) 
+	if (x == 0)
 		return true;
 	return false;
 }
@@ -262,7 +262,7 @@ bool:BlackAndWhite(client)
 	  $ Command $
 =======================*/
 public Action:CmdBlakJack(client, agrs)
-{	
+{
 /*
 	new offset = FindSendPropOffs("CTerrorPlayer","m_isHangingFromLedge");
 	new offset2 = FindSendPropOffs("CTerrorPlayer","m_isIncapacitated");
@@ -290,7 +290,7 @@ public Action:CmdBlakJack(client, agrs)
 	}
 /*												+--------------------------------+
 												|			If Inacaped			 |
-												+--------------------------------+	
+												+--------------------------------+
 */
 	if (incapblock[client] == true || ledgeblock[client] == true)
 	{
@@ -314,7 +314,7 @@ public Action:CmdBlakJack(client, agrs)
 	PlayerIdle(client);
 /*												+--------------------------------+
 												|		Player vs Dealer		 |
-												+--------------------------------+	
+												+--------------------------------+
 */
 	if (invite[client] == false)
 	{
@@ -325,14 +325,14 @@ public Action:CmdBlakJack(client, agrs)
 		}
 		card=GetRandomInt(1, 11);
 		playercard[client]+=card;
-	
+
 		#if debug
 		CPrintToChat(client, "%s incapblock=%d, ledgeblock=%d", TAG, incapblock[client], ledgeblock[client]);
 		#endif
-	
+
 
 		PlayingField(client);
-	
+
 		if (dealer[client] >= 17 && dilerpass[client] == false)
 		{
 			CPrintToChat(client, "%s Dealer - Pass!", FC, dealer[client]);
@@ -341,7 +341,7 @@ public Action:CmdBlakJack(client, agrs)
 	}
 /*												+--------------------------------+
 												|		Player vs Player		 |
-												+--------------------------------+	
+												+--------------------------------+
 */
 	if (invite[client] == true)
 	{
@@ -349,7 +349,7 @@ public Action:CmdBlakJack(client, agrs)
 		playercard[client]+=card;
 		PlayingField(client);
 	}
-	if (g_CvarHud == 1) 
+	if (g_CvarHud == 1)
 		BJMenu(client);
 	return Plugin_Handled;
 }
@@ -361,10 +361,10 @@ public Action:CmdPass(client, agrs)
 		CPrintToChat(client, "%s {blue}%N{default} not NoW!", FC, client);
 		EmitSoundToClient(client, NotNow);
 		return Plugin_Handled;
-	}	
+	}
 /*												+--------------------------------+
 												|		Player vs Dealer		 |
-												+--------------------------------+	
+												+--------------------------------+
 */
 	if (invite[client] == false)
 	{
@@ -373,17 +373,17 @@ public Action:CmdPass(client, agrs)
 			pass[client]=true;
 			passblock[client]=true;
 			PlayerIdle(client);
-	
+
 			new x=playercard[client];
 
 			for (new i=dealer[client]; i <= x; i+=card2)
 			{
 				card2=GetRandomInt(1, 11);
-				dealer[client]+=card2;	
-				
+				dealer[client]+=card2;
+
 				#if debug
 				CPrintToChat(client, "%d +%d", dealer[client], card2);
-				#endif	
+				#endif
 			}
 			CPrintToChat(client, "%s {blue}%N{default} - Pass!", FC, client);
 			PlayingField(client);
@@ -406,16 +406,16 @@ public Action:CmdPass(client, agrs)
 			GetBackMyHp(client);
 			GameisOver(client);
 		}
-		else 
+		else
 		{
-			CPrintToChat(client, "%s {blue}%N{default} not NoW!", FC, client); 
+			CPrintToChat(client, "%s {blue}%N{default} not NoW!", FC, client);
 			EmitSoundToClient(client, NotNow);
 			return Plugin_Handled;
 		}
 	}
 /*												+--------------------------------+
 												|		Player vs Player		 |
-												+--------------------------------+	
+												+--------------------------------+
 */
 	if (invite[client] == true)
 	{
@@ -465,7 +465,7 @@ public PlayerIdle(client)
 }
 
 public KillMsgTimer(client)
-{	
+{
 	if (MsgTimer[client] != INVALID_HANDLE)
 	{
 		CloseHandle(MsgTimer[client]);
@@ -493,10 +493,10 @@ public Action:CancelJack(Handle:timer, any:client)
 /*=====================
 	  $ Game Over $
 =======================*/
-public GameisOver(client)	
+public GameisOver(client)
 {
 	if (IsClientInGame(client) && GetClientTeam(client) != 3 && !IsFakeClient(client)){
-	
+
 									/*-----------Reset-Player-Game--------------*/
 		playercard[client]=0;		/* - Reset u cards 							*/
 		dealer[client]=0; 			/* - Reset dealer cards 					*/
@@ -519,7 +519,7 @@ public GameisOverForAll()
 	for (new i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientInGame(i) && GetClientTeam(i) != 3 && !IsFakeClient(i)){
-		
+
 			playercard[i]=0;
 			dealer[i]=0;
 			pass[i]=false;
@@ -544,7 +544,7 @@ public PlayingField(client)
 {
 /*												+--------------------------------+
 												|		Player vs Dealer		 |
-												+--------------------------------+	
+												+--------------------------------+
 */
 	if (invite[client] == false)
 	{
@@ -569,7 +569,7 @@ public PlayingField(client)
 			{
 				//CPrintToChatAll( "%s %d:%d - {blue}%N{default} is {green}WIN!", FC, playercard[client], dealer[client], client);
 				if (g_l4d1) EmitSoundToClient(client, Win1);
-				else if (!g_l4d1) EmitSoundToClient(client, Win);				
+				else if (!g_l4d1) EmitSoundToClient(client, Win);
 				GetBackMyHp(client);
 				GameisOver(client);
 			}
@@ -591,7 +591,7 @@ public PlayingField(client)
 			{
 				//CPrintToChatAll( "%s %d:%d - {blue}%N{default} is {green}WIN!", FC, playercard[client], dealer[client], client);
 				if (g_l4d1) EmitSoundToClient(client, Win1);
-				else if (!g_l4d1) EmitSoundToClient(client, Win);	
+				else if (!g_l4d1) EmitSoundToClient(client, Win);
 				GetBackMyHp(client);
 				GameisOver(client);
 			}
@@ -608,7 +608,7 @@ public PlayingField(client)
 			{
 				//CPrintToChat(client, "%s %d:%d - Push! lol", FC, playercard[client], dealer[client]);
 				if (g_l4d1) EmitSoundToClient(client, Push1);
-				else if (!g_l4d1) EmitSoundToClient(client, Push);	
+				else if (!g_l4d1) EmitSoundToClient(client, Push);
 				GetBackMyHp(client);
 				GameisOver(client);
 			}
@@ -616,15 +616,15 @@ public PlayingField(client)
 			{
 				//CPrintToChatAll( "%s %d:%d - WoW {blue}%N{default} a {green}CHAMPION!", FC, playercard[client], dealer[client], client);
 				if (g_l4d1) EmitSoundToClient(client, Win1);
-				else if (!g_l4d1) EmitSoundToClient(client, Win);					
+				else if (!g_l4d1) EmitSoundToClient(client, Win);
 				GetBackMyHp(client);
 				GameisOver(client);
-			} 
+			}
 		}
 	}
 /*												+--------------------------------+
 												|		Player vs Player		 |
-												+--------------------------------+	
+												+--------------------------------+
 */
 	if (invite[client] == true)
 	{
@@ -664,7 +664,7 @@ public PlayingField(client)
 				}
 			}
 		}
-		
+
 		CPrintToChatAll("%s [%s]", FC, Message);
 		if (playercard[client] >= 21)
 		{
@@ -679,7 +679,7 @@ public GetBackMyHp(client)
 	PlayerHp=GetClientHealth(client);
 /*												+--------------------------------+
 												|	  Give Prize \ vs Dieler	 |
-												+--------------------------------+	
+												+--------------------------------+
 */
 	if (incapblock[client] == false && ledgeblock[client] == false)
 	{
@@ -687,13 +687,13 @@ public GetBackMyHp(client)
 		{
 			new CanGiveHp=g_CvarHpLimit-g_CvarBet*3;
 			Hp=PlayerHp+g_CvarBet*3;
-			
+
 			if (PlayerHp <= CanGiveHp)
 			{
 				SetEntProp(client, Prop_Send, "m_iHealth", Hp);
 				CPrintToChatAll( "%s %d:%d - WoW {blue}%N{default} a {green}CHAMPION! +%dhp", FC, playercard[client], dealer[client], client, g_CvarBet*3);
 			}
-			else 
+			else
 			{
 				SetEntProp(client, Prop_Send, "m_iHealth", g_CvarHpLimit);
 				CPrintToChatAll( "%s %d:%d - WoW {blue}%N{default} a {green}CHAMPION! +%dhp", FC, playercard[client], dealer[client], client, g_CvarHpLimit-PlayerHp);
@@ -703,13 +703,13 @@ public GetBackMyHp(client)
 		{
 			new CanGiveHp=g_CvarHpLimit-g_CvarBet;
 			Hp=PlayerHp+g_CvarBet;
-			
+
 			if (PlayerHp <= CanGiveHp)
 			{
 				SetEntProp(client, Prop_Send, "m_iHealth", Hp);
 				CPrintToChat(client, "%s %d:%d - Push! lol {green}+%dhp", FC, playercard[client], dealer[client], g_CvarBet);
 			}
-			else 
+			else
 			{
 				SetEntProp(client, Prop_Send, "m_iHealth", g_CvarHpLimit);
 				CPrintToChat(client, "%s %d:%d - Push! lol {green}+%dhp", FC, playercard[client], dealer[client], g_CvarHpLimit-PlayerHp);
@@ -725,16 +725,16 @@ public GetBackMyHp(client)
 				SetEntProp(client, Prop_Send, "m_iHealth", Hp);
 				CPrintToChatAll( "%s %d:%d - {blue}%N{default} is {green}WIN! +%dhp", FC, playercard[client], dealer[client], client, g_CvarBet*2);
 			}
-			else  
+			else
 			{
-				SetEntProp(client, Prop_Send, "m_iHealth", g_CvarHpLimit); 
+				SetEntProp(client, Prop_Send, "m_iHealth", g_CvarHpLimit);
 				CPrintToChatAll( "%s %d:%d - {blue}%N{default} is {green}WIN! +%dhp", FC, playercard[client], dealer[client], client, g_CvarHpLimit-PlayerHp);
 			}
 		}
 	}
 /*												+--------------------------------+
 												|	   Give Prize \ Incaped		 |
-												+--------------------------------+	
+												+--------------------------------+
 */
 	if (incapblock[client] == true || ledgeblock[client] == true)
 	{
@@ -745,18 +745,18 @@ public GetBackMyHp(client)
 		else
 		{
 			CPrintToChatAll( "%s %d:%d - {blue}%N{default} is {green}WIN!", FC, playercard[client], dealer[client], client);
-			
+
 			if (incapblock[client] == true){
 				CheatCommand(client, "give", "health");
-				
+
 				new IncapHp=GetClientHealth(client);
 				Hp=IncapHp-100;
-				
+
 				SetEntProp(client, Prop_Send, "m_iHealth", Hp);
-				
+
 				new offset = FindSendPropInfo("CTerrorPlayer", "m_currentReviveCount");
 				SetEntData(client, offset, 1, 1);
-				/* silver souce 
+				/* silver souce
 				new count = GetEntProp(client, Prop_Send, "m_currentReviveCount");
 				SetEntProp(client, Prop_Send, "m_currentReviveCount", count+1);
 				   end	*/
@@ -764,11 +764,11 @@ public GetBackMyHp(client)
 			}
 			if (ledgeblock[client] == true){
 				CheatCommand(client, "give", "health");
-				
+
 				//new xHp=GetClientHealth(client);
 				//Hp=xHp-100;
 				//SetEntProp(client, Prop_Send, "m_iHealth", Hp);
-				
+
 				// silver code
 				/*
 				g_hCvarDecayRate =FindConVar("pain_pills_decay_rate");
@@ -798,12 +798,12 @@ public GetBackMyHp(client)
 PlayerLoseSpwanPrize(client)
 {
 	if (GetRandomInt(0, 100) <= g_CvarChance)
-	{	
+	{
 		decl Float:LoserPos[3], Float:ang_eye[3];
 		new Float:distance = 50.0;
 /*												+--------------------------------+
 												|	 Loser Prize \ vs Dieler	 |
-												+--------------------------------+	
+												+--------------------------------+
 */
 		if (incapblock[client] == false && ledgeblock[client] == false)
 		{
@@ -811,7 +811,7 @@ PlayerLoseSpwanPrize(client)
 			if (ent != -1)
 			{
 				GetClientFrontLocation(client, LoserPos, ang_eye, distance);
-				
+
 				DispatchSpawn(ent);
 				TeleportEntity(ent, LoserPos, ang_eye, NULL_VECTOR);
 				SetEntPropFloat(ent, Prop_Send, "m_rage", 1.0); // agrs
@@ -821,22 +821,22 @@ PlayerLoseSpwanPrize(client)
 		}
 /*												+--------------------------------+
 												| 	  Loser Prize \ Incaped		 |
-												+--------------------------------+	
+												+--------------------------------+
 */
 		else if (incapblock[client] == true || ledgeblock[client] == true)
 		{
 			hook = true;
 			CheatCommand(client, "z_spawn", "boomer");
 			hook = false;
-			
+
 			GetClientAbsOrigin(client, LoserPos);
-			
+
 			LoserPos[2] += 80.0;
 			LoserPos[1] += 20.0;
-			
+
 			TeleportEntity(g_boomer, LoserPos, NULL_VECTOR, NULL_VECTOR);
 			CreateTimer(0.7, BlowBoomer);
-			
+
 			CPrintToChatAll("%s but {olive}won{default} the consolation prize :)", FC);
 		}
 	}
@@ -844,17 +844,17 @@ PlayerLoseSpwanPrize(client)
 GetClientFrontLocation(client, Float:position[3], Float:angles[3], Float:distance = 50.0 )
 {
 	if (client > 0){
-	
+
 		decl Float:Origin[3], Float:Angles[3], Float:Direction[3];
-		
+
 		GetClientAbsOrigin(client, Origin);
 		GetClientEyeAngles(client, Angles);
 		GetAngleVectors(Angles, Direction, NULL_VECTOR, NULL_VECTOR );
-		
+
 		position[0] = Origin[0] + Direction[0] * distance;
 		position[1] = Origin[1] + Direction[1] * distance;
 		position[2] = Origin[2];
-		
+
 		angles[0] = 0.0;
 		angles[1] = Angles[1] - 180.0;
 		angles[2] = 0.0;
@@ -898,14 +898,14 @@ BJMenu(client)
 	AddMenuItem(menu, "option1", "Get Card");
 	if (playercard[client] >= 17)
 		AddMenuItem(menu, "option2", "Say Pass");
-		
+
 	SetMenuExitButton(menu, false);
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
 public MenuHandler1(Handle:menu, MenuAction:action, client, param2)
 {
-	if (action == MenuAction_Select) 
+	if (action == MenuAction_Select)
 	{
 		switch (param2)
 		{
@@ -946,7 +946,7 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 {
 	decl String:game[32];
 	GetGameFolderName(game, sizeof(game));
-	
+
 	if (!StrEqual(game, "left4dead", false) &&
 		!StrEqual(game, "left4dead2", false) ||
 		!IsDedicatedServer())

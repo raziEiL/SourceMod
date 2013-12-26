@@ -50,7 +50,7 @@ public Action:CmdHE(client, args)
 }
 #endif
 
-public Action:HE_PlayerLedgeGrab(Handle:event, const String:name[], bool:dontBroadcast)
+public HE_PlayerLedgeGrab(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 
@@ -62,7 +62,7 @@ public Action:HE_PlayerLedgeGrab(Handle:event, const String:name[], bool:dontBro
 	#endif
 }
 
-public Action:HE_ReviveSuccess(Handle:event, const String:name[], bool:dontBroadcast)
+public HE_ReviveSuccess(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (!GetEventBool(event, "ledge_hang")) return;
 	
