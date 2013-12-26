@@ -61,9 +61,9 @@ public OnPluginStart()
 }
 
 /*                                      +==========================================+
-										|               LADDER GLITCH              |
-										|             NO FALL DMG GLITCH           |
-										+==========================================+
+                                        |               LADDER GLITCH              |
+                                        |             NO FALL DMG GLITCH           |
+                                        +==========================================+
 */
 public Action:OnPlayerRunCmd(client, &buttons)
 {
@@ -121,8 +121,8 @@ bool:IsFallDamage(client)
 }
 
 /*                                      +==========================================+
-										|               DROWN GLITCH               |
-										+==========================================+
+                                        |               DROWN GLITCH               |
+                                        +==========================================+
 */
 public OnClientDisconnect(client)
 {
@@ -130,7 +130,7 @@ public OnClientDisconnect(client)
 		EF_ClearAllVars(client);
 }
 
-public Action:EF_ev_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
+public EF_ev_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	for (new i = 1; i <= MaxClients; i++){
 
@@ -141,7 +141,7 @@ public Action:EF_ev_RoundStart(Handle:event, const String:name[], bool:dontBroad
 	}
 }
 
-public Action:EF_ev_PlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
+public EF_ev_PlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (GetEventInt(event, "type") & DMG_DROWN){
 
@@ -267,7 +267,7 @@ public Action:EF_t_RestoreTempHealth(Handle:timer, any:client)
 	return Plugin_Continue;
 }
 
-public Action:EF_ev_HealSuccess(Handle:event, const String:name[], bool:dontBroadcast)
+public EF_ev_HealSuccess(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, StrEqual(name, "player_incapacitated") ? "userid" : "subject"));
 
@@ -280,7 +280,7 @@ public Action:EF_ev_HealSuccess(Handle:event, const String:name[], bool:dontBroa
 	}
 }
 
-public Action:EF_ev_PillsUsed(Handle:event, const String:name[], bool:dontBroadcast)
+public EF_ev_PillsUsed(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 
@@ -462,8 +462,8 @@ EF_ToogleEvents(bool:bHook)
 }
 
 /*                                      +==========================================+
-										|               Debug Stuff                |
-										+==========================================+
+                                        |               Debug Stuff                |
+                                        +==========================================+
 */
 #if debug
 static bool:g_bDebugEnabled[MAXPLAYERS+1], Handle:g_hDebugTimer[MAXPLAYERS+1];
