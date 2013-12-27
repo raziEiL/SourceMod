@@ -64,7 +64,7 @@ static	String:DEBUG2[256];
 /*=====< debug >=====*/
 #define debug 0 // on,off
 
-#define KillBill 0 // skip Bill
+#define KILL_BILL 0 // 1=don't track Bill character model
 
 /*=====================
   * Tag & Log & Sound *
@@ -73,8 +73,8 @@ static	String:DEBUG2[256];
 #define FD		"[Defib Fix]"
 #define FM		"[Model Fix]"
 
-#define DEFIB_FIX	2
-#define CLEAR_ALL	3
+#define DEFIB_FIX		2
+#define CLEAR_ALL		3
 
 #define LOG		"logs\\fix_sappy.log"
 
@@ -141,33 +141,18 @@ public OnPluginStart()
 	HookConVarChange(g_hModel, OnCVarChange);
 	GetCVars();
 
-	//#if debug
-	RegAdminCmd("fx", CmdFix, ADMFLAG_ROOT);
-	//#endif
+#if debug
+	RegAdminCmd("sm_sappyfx", CmdFix, ADMFLAG_ROOT);
+#endif
 }
 
-//#if debug
-/* * * Test Command * * */
+#if debug
 public Action:CmdFix(client, args)
 {
-	/*
-	new entity = -1;
-
-	for (new i = 1; i <= MaxClients; i++){
-		if (IsClientInGame(i) && GetClientTeam(i) == 2)
-			PrintToChat(client, "%N (%d), char %d, ghost <%d>", i, i, GetEntProp(i, Prop_Send, "m_survivorCharacter"), Ghost[i]);
-		if (hzTimer[i] != INVALID_HANDLE)
-			PrintToChatAll("CLIENT (%d) have dead cheking timer", i);
-	}
-	while ((entity = FindEntityByClassname(entity , "survivor_death_model")) != INVALID_ENT_REFERENCE)
-		PrintToChatAll("ghost ent <%d>", entity);
-
-	//GetClientOfUserId(GetEntProp(i, Prop_Send, "m_humanSpectatorUserID"))
-	*/
 	CreateTimer(0.0, SappyFix, -3);
 	return Plugin_Handled;
 }
-//#endif
+#endif
 
 public OnMapStart()
 {
@@ -208,7 +193,7 @@ public Action:SaveEntityModel(Handle:timer)
 			iData[i] = GetEntProp(i, Prop_Send, "m_survivorCharacter");
 			GetClientModel(i, sModel[i], 64);
 
-			#if KillBill
+			#if KILL_BILL
 				if (StrEqual(sModel[i], "models/survivors/survivor_namvet.mdl"))
 					sModel[i] = "\0";
 			#endif
@@ -768,7 +753,11 @@ public Action:IsClientRevived(Handle:timer, any:client)
 			LogToFile(DEBUG, "%s Player %N (%d) <%d> [ALIVE]", FD, client, client, Ghost[client]);
 		#endif
 
-		KillGhostByInput(client, true);
+		#if debug
+			KillGhostByInput(client, true);
+		#else
+			KillGhostByInput(client);
+		#endif
 	}
 }
 
@@ -788,7 +777,11 @@ TimeToKill(client)
 										| 	   Ghost ENDING  (Action fixing)	   |
 										+------------------------------------------+
 */
+#if debug
 KillGhostByInput(id, bMsg=false)
+#else
+KillGhostByInput(id)
+#endif
 {
 	if (!g_bCvarDef || Ghost[id] == 0) return;
 
