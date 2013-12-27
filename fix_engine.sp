@@ -394,7 +394,7 @@ SetTempHealth(client, Float:health)
 	SetEntPropFloat(client, Prop_Send, "m_healthBufferTime", GetGameTime());
 	SetEntPropFloat(client, Prop_Send, "m_healthBuffer", health);
 }
-
+// Code by SilverShot aka Silvers (Healing Gnome plugin https://forums.alliedmods.net/showthread.php?p=1658852)
 Float:GetTempHealth(client)
 {
 	new Float:fTempHealth = GetEntPropFloat(client, Prop_Send, "m_healthBuffer");
