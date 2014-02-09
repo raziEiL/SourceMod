@@ -21,9 +21,9 @@ static	Handle:g_enable, Handle:g_info, Handle:g_zombie, Handle:g_extra, Handle:g
 		Handle:g_ko, Handle:g_bs, Handle:g_health, Handle:g_health1, Handle:g_health2, Handle:g_health3,
 		Handle:g_health4, Handle:g_health5, Handle:g_health6, Handle:g_health7, Handle:g_round1,
 		Handle:g_round2, Handle:g_round3,Handle:g_round4, Handle:g_round5, Handle:g_round6, Handle:g_round7, Handle:tankhp, Handle:zombie, Handle:bosses, Handle:specials, Handle:mobs, Handle:ST, Handle:STF,
-		Handle:STI, Handle:ST1, Handle:ST2, Handle:ST3,
+		Handle:STI, Handle:ST1, Handle:ST2, Handle:ST3, Handle:g_heal,
 
-		g_CvarEnable, g_CvarInfo, g_CvarZombie, g_CvarExtra, g_CvarTimer, g_CvarSupport, g_CvarKo, g_CvarBS,
+		g_CvarEnable, g_CvarInfo, g_CvarZombie, g_CvarExtra, g_CvarTimer, g_CvarSupport, g_CvarKo, g_CvarBS, g_CvarHeal,
 		g_CvarHealth, g_CvarHealth1, g_CvarHealth2, g_CvarHealth3, g_CvarHealth4, g_CvarHealth5,
 		g_CvarHealth6, g_CvarHealth7, g_CvarRound1, g_CvarRound2, g_CvarRound3, g_CvarRound4, g_CvarRound5, g_CvarRound6, g_CvarRound7,
 
@@ -77,7 +77,7 @@ public OnPluginStart()
 	g_timer = CreateConVar("tank_club_timer", "60", "Delay before game starts in sec", FCVAR_PLUGIN);
 	g_support = CreateConVar("tank_club_st", "0", "Supports SuperTanks plugin.  Tanks will be spawned at 3 and 6 rounds: 0 - Disable, 1 - Enable", FCVAR_PLUGIN);
 	g_ko = CreateConVar("tank_club_ko", "1", "Forced to slay all the tanks when the next round begins: 0 - Disable, 1 - Enable", FCVAR_PLUGIN);
-	g_bs = CreateConVar("tank_club_bs", "2", "Auto-balance feature. Tanks count will depend on player number.", FCVAR_PLUGIN);
+	g_bs = CreateConVar("tank_club_bs", "2", "Auto-balance feature. Tanks count will depend on player number and this convar. [Max Tanks = Player numbers - Convar Value]", FCVAR_PLUGIN);
 	g_health = CreateConVar("tank_club_hp_zero", "2000", "Default Tank health.", FCVAR_PLUGIN);
 	g_health1 = CreateConVar("tank_club_hp_one", "4000", "Tank health in 1st round.", FCVAR_PLUGIN);
 	g_health2 = CreateConVar("tank_club_hp_two", "6000", "Tank health in 2 round.", FCVAR_PLUGIN);
@@ -93,6 +93,7 @@ public OnPluginStart()
 	g_round5 = CreateConVar("tank_club_count_four", "15", "Tanks in the 4 round.", FCVAR_PLUGIN);
 	g_round6 = CreateConVar("tank_club_count_five", "20", "Tanks in the 5 round.", FCVAR_PLUGIN);
 	g_round7 = CreateConVar("tank_club_count_six", "28", "Tanks in the 6 round.", FCVAR_PLUGIN);
+	g_heal = CreateConVar("tank_club_heal", "0", "Heal Survivors each round: 0 - Disable, 1 - Enable", FCVAR_PLUGIN);
 	AutoExecConfig(true, "l4d2_TankFightClub");
 
 	HookConVarChange(g_enable, OnPluginEnable);
@@ -118,7 +119,8 @@ public OnPluginStart()
 	HookConVarChange(g_round5, OnCVarChange);
 	HookConVarChange(g_round6, OnCVarChange);
 	HookConVarChange(g_round7, OnCVarChange);
-
+	HookConVarChange(g_heal, OnCVarChange);
+	
 	RegConsoleCmd("sm_fc", CmdCount, "Tank Fight Club info");
 	RegConsoleCmd("sm_fightclub", CmdCount, "Tank Fight Club info");
 	RegConsoleCmd("sm_tankclub", CmdCount, "Tank Fight Club info");
@@ -495,9 +497,15 @@ ExpandedEdition(bool:status)
 
 KO()
 {
+	if (g_CvarHeal){
+
+		for (new i = 1; i <= MaxClients; i++)
+			if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == 2)
+				HealingTouch(i);
+	}
+
 	if (g_CvarKo == 1  && KOblock2 == false && TankLive != 0){
 		KOblock = true;
-		TanksKO();
 
 		for( new i = 1; i <= MaxClients; i++ )
 		{
@@ -511,12 +519,6 @@ KO()
 	}
 }
 
-TanksKO()
-{
-	if (g_CvarInfo == 0)
-		return;
-	CPrintToChatAll("%s {olive}Tanks K.O! -%d", FC, TankLive);
-}
 /*////////////////////////
 		= Cmd =
 *////////////////////////
@@ -741,6 +743,7 @@ GetCVars()
 	g_CvarRound5 = GetConVarInt(g_round5);
 	g_CvarRound6 = GetConVarInt(g_round6);
 	g_CvarRound7 = GetConVarInt(g_round7);
+	g_CvarHeal = GetConVarBool(g_heal);
 }
 
 /*////////////////////////
@@ -844,6 +847,15 @@ CheatCommand(client, const String:command[], const String:arguments[]="")
 	SetCommandFlags(command, flags & ~FCVAR_CHEAT);
 	FakeClientCommand(client, "%s %s", command, arguments);
 	SetCommandFlags(command, flags);
+}
+
+HealingTouch(client)
+{
+	CheatCommand(client, "give", "health");
+	SetEntPropFloat(client, Prop_Send, "m_healthBufferTime", GetGameTime());
+	SetEntPropFloat(client, Prop_Send, "m_healthBuffer", 0.0);
+	SetEntProp(client, Prop_Send, "m_currentReviveCount", 0);
+	SetEntProp(client, Prop_Send, "m_isGoingToDie", 0);
 }
 
 GetRandomClient()
