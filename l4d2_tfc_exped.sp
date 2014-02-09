@@ -1,4 +1,6 @@
-#define PLUGIN_VERSION "1.4"
+#define PLUGIN_VERSION "1.5"
+
+#pragma semicolon 1
 
 #include <sourcemod>
 #include <sdktools>
@@ -7,7 +9,7 @@
 /*////////////////////////
 	= Chat debug, Tag =
 *////////////////////////
-#define debug false // on,off
+#define debug 0
 #if debug
 #endif
 #define TAG  	  "[debug]"
@@ -15,29 +17,29 @@
 /*////////////////////////
 		= ConVar =
 *////////////////////////
-new		Handle:g_enable, Handle:g_info, Handle:g_zombie, Handle:g_extra, Handle:g_timer, Handle:g_support, 
-		Handle:g_ko, Handle:g_bs, Handle:g_health, Handle:g_health1, Handle:g_health2, Handle:g_health3, 
-		Handle:g_health4, Handle:g_health5, Handle:g_health6, Handle:g_health7, Handle:g_round1, 
-		Handle:g_round2, Handle:g_round3,Handle:g_round4, Handle:g_round5, Handle:g_round6, Handle:g_round7, Handle:tankhp, Handle:zombie, Handle:bosses, Handle:specials, Handle:mobs, Handle:ST, Handle:STF, 
-		Handle:STI, Handle:ST1, Handle:ST2, Handle:ST3;
+static	Handle:g_enable, Handle:g_info, Handle:g_zombie, Handle:g_extra, Handle:g_timer, Handle:g_support,
+		Handle:g_ko, Handle:g_bs, Handle:g_health, Handle:g_health1, Handle:g_health2, Handle:g_health3,
+		Handle:g_health4, Handle:g_health5, Handle:g_health6, Handle:g_health7, Handle:g_round1,
+		Handle:g_round2, Handle:g_round3,Handle:g_round4, Handle:g_round5, Handle:g_round6, Handle:g_round7, Handle:tankhp, Handle:zombie, Handle:bosses, Handle:specials, Handle:mobs, Handle:ST, Handle:STF,
+		Handle:STI, Handle:ST1, Handle:ST2, Handle:ST3,
 
-new		g_CvarEnable, g_CvarInfo, g_CvarZombie, g_CvarExtra, g_CvarTimer, g_CvarSupport, g_CvarKo, g_CvarBS,
-		g_CvarHealth, g_CvarHealth1, g_CvarHealth2, g_CvarHealth3, g_CvarHealth4, g_CvarHealth5, 
-		g_CvarHealth6, g_CvarHealth7, g_CvarRound1, g_CvarRound2, g_CvarRound3, g_CvarRound4, g_CvarRound5, g_CvarRound6, g_CvarRound7;
+		g_CvarEnable, g_CvarInfo, g_CvarZombie, g_CvarExtra, g_CvarTimer, g_CvarSupport, g_CvarKo, g_CvarBS,
+		g_CvarHealth, g_CvarHealth1, g_CvarHealth2, g_CvarHealth3, g_CvarHealth4, g_CvarHealth5,
+		g_CvarHealth6, g_CvarHealth7, g_CvarRound1, g_CvarRound2, g_CvarRound3, g_CvarRound4, g_CvarRound5, g_CvarRound6, g_CvarRound7,
 
-new		n, m, TankALL, TankLive, TankCount, TankRound;
+		n, m, TankALL, TankLive, TankCount, TankRound,
 
-new		Handle:MsgTimer, Handle:TankFightClubTimer;
+		Handle:MsgTimer, Handle:TankFightClubTimer,
 
-new		bool:club, //access to TankFightClub.
+		bool:club, //access to TankFightClub.
 		bool:block = false,	//blocks PanicEvent if already been started
 		bool:block2 = false, //blocks OnClientPost.. if already been started.
 		bool:block3 = false, //blocks OnClientPost.. and PanicEvent if game is started.
 		bool:block4 = false, //blocks OnClientPost.. when UnhookEvent.
 		bool:block5 = false, //blocks re-HookEvent, re-UnhookEvent.
 		bool:KOblock = false, //block counter
-		bool:KOblock2 = false;
-
+		bool:KOblock2 = false,
+		bool:L4D2 = true;
 /*////////////////////////
 		= Sound =
 *////////////////////////
@@ -47,7 +49,7 @@ new		bool:club, //access to TankFightClub.
 
 public Plugin:myinfo =
 {
-	name = "[L4D2] Tank Fight Club: Expanded Edition",
+	name = "[L4D & L4D2] Tank Fight Club: Expanded Edition",
 	author = "raziEiL [disawar1]",
 	description = "Welcome to the Tank Fight Club. Kill Them All!",
 	version = PLUGIN_VERSION,
@@ -63,17 +65,19 @@ public OnPluginStart()
 	GetGameFolderName(game_name, sizeof(game_name));
 	if (!StrEqual(game_name, "left4dead2", false))
 	{
-		SetFailState("plugin supports Left 4 Dead 2 only.");
+		L4D2 = false;
 	}
-	
+
+	CreateConVar("tank_fight_club_version", PLUGIN_VERSION, "Tank Fight Club: Expanded Edition plugin version.", FCVAR_PLUGIN|FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_DONTRECORD);
+
 	g_enable = CreateConVar("tank_club_enable", "1", "Plugin: 0 - Disable, 1 - Enable", FCVAR_PLUGIN);
-	g_info 	= CreateConVar("tank_club_info", "1", "Show info message: 0 - Disable, 1 - Type I, 2 - Type II, 3 - Type III", FCVAR_PLUGIN);
+	g_info = CreateConVar("tank_club_info", "1", "Show info message: 0 - Disable, 1 - Type I, 2 - Type II, 3 - Type III", FCVAR_PLUGIN);
 	g_zombie = CreateConVar("tank_club_zombie", "1", "Blocks Boss and zombie spawns: 0 - Disable, 1 - Enable", FCVAR_PLUGIN);
 	g_extra = CreateConVar("tank_club_extra", "1", "Extra 5, 6, 7 rounds: 0 - Disable, 1 - Enable", FCVAR_PLUGIN);
 	g_timer = CreateConVar("tank_club_timer", "60", "Delay before game starts in sec", FCVAR_PLUGIN);
-	g_support = CreateConVar("tank_club_st", "0", "Expanded Edition - support SuperTanks in 3, 6 rounds: 0 - Disable, 1 - Enable", FCVAR_PLUGIN);
-	g_ko = CreateConVar("tank_club_ko", "1", "Expanded Edition - killed all tanks from the previous round: 0 - Disable, 1 - Enable", FCVAR_PLUGIN);
-	g_bs = CreateConVar("tank_club_bs", "2", "Expanded Edition - auto balance, difference between the count of tanks and players", FCVAR_PLUGIN);
+	g_support = CreateConVar("tank_club_st", "0", "Supports SuperTanks plugin.  Tanks will be spawned at 3 and 6 rounds: 0 - Disable, 1 - Enable", FCVAR_PLUGIN);
+	g_ko = CreateConVar("tank_club_ko", "1", "Forced to slay all the tanks when the next round begins: 0 - Disable, 1 - Enable", FCVAR_PLUGIN);
+	g_bs = CreateConVar("tank_club_bs", "2", "Auto-balance feature. Tanks count will depend on player number.", FCVAR_PLUGIN);
 	g_health = CreateConVar("tank_club_hp_zero", "2000", "Default Tank health.", FCVAR_PLUGIN);
 	g_health1 = CreateConVar("tank_club_hp_one", "4000", "Tank health in 1st round.", FCVAR_PLUGIN);
 	g_health2 = CreateConVar("tank_club_hp_two", "6000", "Tank health in 2 round.", FCVAR_PLUGIN);
@@ -90,7 +94,7 @@ public OnPluginStart()
 	g_round6 = CreateConVar("tank_club_count_five", "20", "Tanks in the 5 round.", FCVAR_PLUGIN);
 	g_round7 = CreateConVar("tank_club_count_six", "28", "Tanks in the 6 round.", FCVAR_PLUGIN);
 	AutoExecConfig(true, "l4d2_TankFightClub");
-		
+
 	HookConVarChange(g_enable, OnPluginEnable);
 	HookConVarChange(g_info, OnCVarChange);
 	HookConVarChange(g_zombie, OnDirectorEnable);
@@ -114,13 +118,13 @@ public OnPluginStart()
 	HookConVarChange(g_round5, OnCVarChange);
 	HookConVarChange(g_round6, OnCVarChange);
 	HookConVarChange(g_round7, OnCVarChange);
-	
-	RegConsoleCmd("fc", CmdCount, "Tank Fight Club info");
-	RegConsoleCmd("fightclub", CmdCount, "Tank Fight Club info");
-	RegConsoleCmd("tankclub", CmdCount, "Tank Fight Club info");
-	RegAdminCmd("ko", CmdSlay, ADMFLAG_KICK, "K.O - Slay all Tanks");
-	RegAdminCmd("knockout", CmdSlay, ADMFLAG_KICK, "K.O - Slay all Tanks");
-	
+
+	RegConsoleCmd("sm_fc", CmdCount, "Tank Fight Club info");
+	RegConsoleCmd("sm_fightclub", CmdCount, "Tank Fight Club info");
+	RegConsoleCmd("sm_tankclub", CmdCount, "Tank Fight Club info");
+	RegAdminCmd("sm_ko", CmdSlay, ADMFLAG_KICK, "K.O - Slay all Tanks");
+	RegAdminCmd("sm_knockout", CmdSlay, ADMFLAG_KICK, "K.O - Slay all Tanks");
+
 	tankhp = FindConVar("z_tank_health");
 	zombie = FindConVar("z_common_limit");
 	bosses = FindConVar("director_no_bosses");
@@ -129,20 +133,29 @@ public OnPluginStart()
 	Director();
 }
 
+public OnPluginEnd()
+{
+	ResetConVar(tankhp);
+	ResetConVar(zombie);
+	ResetConVar(bosses);
+	ResetConVar(specials);
+	ResetConVar(mobs);
+}
+
 public OnMapStart()
 {
 	if (block4 == false){
-		block2 = false
-		block3 = false
-		PrecacheSound(SOUND_CLOCK, true)
-		PrecacheSound(SOUND_FIGHT, true)
-		PrecacheSound(SOUND_TANK, true)
+		block2 = false;
+		block3 = false;
+		PrecacheSound(SOUND_CLOCK, true);
+		PrecacheSound(SOUND_FIGHT, true);
+		PrecacheSound(SOUND_TANK, true);
 		ExpandedEditionEnable();
 	}
 	else {
-	
+
 		#if debug
-		PrintToServer("%s OnMapStart Blocked! Plugin [Tank Fight Club: Expanded edition] Disable", TAG)
+		PrintToServer("%s OnMapStart Blocked! Plugin [Tank Fight Club: Expanded edition] Disable", TAG);
 		#endif
 	}
 }
@@ -150,30 +163,30 @@ public OnMapStart()
 public OnClientPostAdminCheck(client)
 {
 	if (block4 == false){
-	
+
 		new clientID = GetClientUserId(client);
-		CreateTimer(20.0, Welcome, clientID)
-	
+		CreateTimer(20.0, Welcome, clientID);
+
 		if (block2 == false && block3 == false){
 
 			#if debug
-			CPrintToChatAll("%s OnClientPostAdminCheck is NOT Blocked!", TAG)
+			CPrintToChatAll("%s OnClientPostAdminCheck is NOT Blocked!", TAG);
 			#endif
 
-			block2 = true
-			ResetValues()
+			block2 = true;
+			ResetValues();
 		}
 		else {
-	
+
 			#if debug
-			CPrintToChatAll("%s OnClientPostAdminCheck is Blocked!", TAG)
+			CPrintToChatAll("%s OnClientPostAdminCheck is Blocked!", TAG);
 			#endif
 		}
 	}
 	else {
-	
+
 		#if debug
-		CPrintToChatAll("%s OnClientPostAdminCheck is Blocked! Plugin Disable", TAG)
+		CPrintToChatAll("%s OnClientPostAdminCheck is Blocked! Plugin Disable", TAG);
 		#endif
 	}
 }
@@ -183,125 +196,149 @@ public OnClientPostAdminCheck(client)
 public RoundStart(Handle:event, String:event_name[], bool:dontBroadcast)
 {
 	if (g_CvarInfo == 1 || g_CvarInfo == 2 || g_CvarInfo == 3){
-		CPrintToChatAll("%s haha Tanks beat you? {olive}Table{default} of Fighting is:\n Tanks Today: {green}%d{default}\n Tanks Killed: {blue}%d{default}\n Last Round was: {olive}%d{default}\n ------", FC, TankALL, TankCount, n)
+		CPrintToChatAll("%s haha Tanks beat you? {olive}Table{default} of Fighting is:\n Tanks Today: {green}%d{default}\n Tanks Killed: {blue}%d{default}\n Last Round was: {olive}%d{default}\n ------", FC, TankALL, TankCount, n);
 	}
-	ResetValues()
+	ResetValues();
 }
 
 public NewTank(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	if (TankLive <= 10) //fixed bug *
-	TankLive++;
 	#if debug
-	CPrintToChatAll("%s New Tank", TAG)
+	CPrintToChatAll("%s New Tank", TAG);
 	#endif
+
+	if (TankLive <= 10) //fixed bug *
+		TankLive++;
 	else
-	CPrintToChatAll("%s WARNING! Reached the Maximum Tanks limit!", FC)
+		CPrintToChatAll("%s WARNING! Reached the Maximum Tanks limit!", FC);
 }
 
 public TankKilled(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (TankLive >= 1) //fixed bug *
 	TankLive--;
-	
+
 	if (KOblock == false){
 		TankALL++;
 		TankRound++;
 		TankCount++;
 		Info();
 
-		
-		if (n == 0 && TankRound == g_CvarRound1)
+		switch (n)
 		{
-			KO()
-			SetConVarInt(tankhp, g_CvarHealth1);
-			PrintHintTextToAll("Round 1")
-			TankRound = 0
-			n = 1
-			EmitSoundToAll(SOUND_FIGHT)
-		}
-		if (n == 1 && TankRound == g_CvarRound2)
-		{
-			KO()
-			SetConVarInt(tankhp, g_CvarHealth2);
-			PrintHintTextToAll("Round 2");
-			TankRound = 0
-			n = 2
-			EmitSoundToAll(SOUND_FIGHT)
-		}
-		if (n == 2 && TankRound == g_CvarRound3)
-		{	
-			KO()
-			SetConVarInt(tankhp, g_CvarHealth3);
-			TankRound = 0
-			n = 3
-			EmitSoundToAll(SOUND_FIGHT)
-			if (g_CvarSupport == 0){
-				PrintHintTextToAll("Round 3");
+			case 0:
+			{
+				if (TankRound == g_CvarRound1)
+				{
+					KO();
+					SetConVarInt(tankhp, g_CvarHealth1);
+					PrintHintTextToAll("Round 1");
+					TankRound = 0;
+					n = 1;
+					EmitSoundToAll(SOUND_FIGHT);
+				}
 			}
-			//===Ext Ed===
-			if (g_CvarSupport == 1){
-				PrintHintTextToAll("Round 3 SuperTanks")
-				SetConVarInt(ST, 1)
-				SetConVarInt(STI, 1)
+			case 1:
+			{
+				if (TankRound == g_CvarRound2)
+				{
+					KO();
+					SetConVarInt(tankhp, g_CvarHealth2);
+					PrintHintTextToAll("Round 2");
+					TankRound = 0;
+					n = 2;
+					EmitSoundToAll(SOUND_FIGHT);
+				}
 			}
-		}
-		if (n == 3 && TankRound == g_CvarRound4)
-		{	
-			KO()
-			SetConVarInt(tankhp, g_CvarHealth4);
-			PrintHintTextToAll("Round 4");
-			TankRound = 0
-			n = 4
-			EmitSoundToAll(SOUND_FIGHT)
-			if (g_CvarSupport == 1){
-				SetConVarInt(ST, 0)
-				SetConVarInt(STI, 0)
+			case 2:
+			{
+				if (TankRound == g_CvarRound3)
+				{
+					KO();
+					SetConVarInt(tankhp, g_CvarHealth3);
+					TankRound = 0;
+					n = 3;
+					EmitSoundToAll(SOUND_FIGHT);
+					if (g_CvarSupport == 0){
+						PrintHintTextToAll("Round 3");
+					}
+					//===Ext Ed===
+					if (g_CvarSupport == 1){
+						PrintHintTextToAll("Round 3 SuperTanks");
+						SetConVarInt(ST, 1);
+						SetConVarInt(STI, 1);
+					}
+				}
 			}
-		}
-	//Extra
-		if (n == 4 && TankRound == g_CvarRound5 && g_CvarExtra == 1)
-		{
-			KO()
-			SetConVarInt(tankhp, g_CvarHealth5);
-			PrintHintTextToAll("Extra Round 5");
-			TankRound = 0
-			n = 5
-			EmitSoundToAll(SOUND_FIGHT)
-		}
-		if (n == 5 && TankRound == g_CvarRound6 && g_CvarExtra == 1)
-		{	
-			KO()
-			SetConVarInt(tankhp, g_CvarHealth6);
-			TankRound = 0
-			n = 6
-			EmitSoundToAll(SOUND_FIGHT)
-			if (g_CvarSupport == 0){
-				PrintHintTextToAll("Extra Round 6");
+			case 3:
+			{
+				if (TankRound == g_CvarRound4)
+				{
+					KO();
+					SetConVarInt(tankhp, g_CvarHealth4);
+					PrintHintTextToAll("Round 4");
+					TankRound = 0;
+					n = 4;
+					EmitSoundToAll(SOUND_FIGHT);
+					if (g_CvarSupport == 1){
+						SetConVarInt(ST, 0);
+						SetConVarInt(STI, 0);
+					}
+				}
 			}
-			//===Ext Ed===
-			if (g_CvarSupport == 1){
-				PrintHintTextToAll("Extra Round 6 SuperTanks");
-				SetConVarInt(ST, 1)
-				SetConVarInt(STI, 1)
+			case 4:
+			{
+			//Extra
+				if (TankRound == g_CvarRound5 && g_CvarExtra == 1)
+				{
+					KO();
+					SetConVarInt(tankhp, g_CvarHealth5);
+					PrintHintTextToAll("Extra Round 5");
+					TankRound = 0;
+					n = 5;
+					EmitSoundToAll(SOUND_FIGHT);
+				}
 			}
-		}
-		if (n == 6 && TankRound == g_CvarRound7 && g_CvarExtra == 1)
-		{	
-			KO()
-			SetConVarInt(tankhp, g_CvarHealth7);
-			PrintHintTextToAll("Extra Round 7");
-			TankRound = 0
-			n = 7
-			EmitSoundToAll(SOUND_FIGHT)
-			if (g_CvarSupport == 1){
-				SetConVarInt(ST, 0)
-				SetConVarInt(STI, 0)
+			case 5:
+			{
+				if (TankRound == g_CvarRound6 && g_CvarExtra == 1)
+				{
+					KO();
+					SetConVarInt(tankhp, g_CvarHealth6);
+					TankRound = 0;
+					n = 6;
+					EmitSoundToAll(SOUND_FIGHT);
+					if (g_CvarSupport == 0){
+						PrintHintTextToAll("Extra Round 6");
+					}
+					//===Ext Ed===
+					if (g_CvarSupport == 1){
+						PrintHintTextToAll("Extra Round 6 SuperTanks");
+						SetConVarInt(ST, 1);
+						SetConVarInt(STI, 1);
+					}
+				}
+			}
+			case 6:
+			{
+				if (TankRound == g_CvarRound7 && g_CvarExtra == 1)
+				{
+					KO();
+					SetConVarInt(tankhp, g_CvarHealth7);
+					PrintHintTextToAll("Extra Round 7");
+					TankRound = 0;
+					n = 7;
+					EmitSoundToAll(SOUND_FIGHT);
+					if (g_CvarSupport == 1){
+						SetConVarInt(ST, 0);
+						SetConVarInt(STI, 0);
+					}
+				}
 			}
 		}
 	}
 	#if debug
-	CPrintToChatAll("%s Tank is Die, TankHp = {green}%d{default}, TankLive =  {green}%d", TAG, GetConVarInt(tankhp), TankLive)
+	CPrintToChatAll("%s Tank is Die, TankHp = {green}%d{default}, TankLive =  {green}%d", TAG, GetConVarInt(tankhp), TankLive);
 	#endif
 }
 
@@ -309,19 +346,19 @@ public PanicEvent(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (block == false && block3 == false){
 		#if debug
-		CPrintToChatAll("%s Panic Event before time up!", TAG)
+		CPrintToChatAll("%s Panic Event before time up!", TAG);
 		#endif
-		
-		club = true
-		block = true
-		Triger()	
+
+		club = true;
+		block = true;
+		Triger();
 	}
 	else {
 		#if debug
-		CPrintToChatAll("%s Panic Event is Blocked!", TAG)
+		CPrintToChatAll("%s Panic Event is Blocked!", TAG);
 		#endif
-		
-		return
+
+		return;
 	}
 }
 
@@ -330,25 +367,25 @@ public PanicEvent(Handle:event, const String:name[], bool:dontBroadcast)
 *////////////////////////
 public Action:PrintMsg(Handle:timer)
 {
-	new l = g_CvarTimer - m
-	
+	new l = g_CvarTimer - m;
+
 	if(l <= 0){
-		club = true
-		Triger()
+		club = true;
+		Triger();
 	}
 	else {
-		CPrintToChatAll("Game Starts in {green}%d{default} sec.", l)
-		EmitSoundToAll(SOUND_CLOCK)
-		m += 15
+		CPrintToChatAll("Game Starts in {green}%d{default} sec.", l);
+		EmitSoundToAll(SOUND_CLOCK);
+		m += 15;
 	}
-	return Plugin_Continue
+	return Plugin_Continue;
 }
 
 public Action:SpawnTank(Handle:timer)
 {
-	new client = GetRandomClient()
+	new client = GetRandomClient();
 	if (client){
-	
+
 		if (TankLive <= 1)
 		{
 			new human = 0;
@@ -359,17 +396,17 @@ public Action:SpawnTank(Handle:timer)
 					human++;
 					if (TankLive < human - g_CvarBS)
 					{
-						CheatCommand(client, "z_spawn", "tank auto");
+						CheatCommand(client, L4D2 ? "z_spawn_old" : "z_spawn", "tank auto");
 					}
 				}
-			}		
+			}
 		}
 	}
 	else {
 		#if debug
-		CPrintToChatAll("%s `SpawnTank` return client BOT, clent not on Game!", TAG)
+		CPrintToChatAll("%s `SpawnTank` return client BOT, clent not on Game!", TAG);
 		#endif
-	return
+	return;
 	}
 }
 
@@ -377,269 +414,277 @@ public Action:Welcome(Handle:timer, any:client)
 {
 	client = GetClientOfUserId(client);
 	if (client && IsClientInGame(client) && IsPlayerAlive(client))
-		CPrintToChat(client, "%s {olive}%N{default} Welcome to TFC by {olive}raziEiL [disawar1]{default}\nType {olive}!fc{default} in chat to see the results of fights.", FC, client)
+		CPrintToChat(client, "%s {olive}%N{default} Welcome to TFC by {olive}raziEiL [disawar1]{default}\nType {olive}!fc{default} in chat to see the results of fights.", FC, client);
 }
 
-public Triger()
+Triger()
 {
 	if (MsgTimer != INVALID_HANDLE){
-		KillTimer(MsgTimer)
-		MsgTimer = INVALID_HANDLE
-		
+		KillTimer(MsgTimer);
+		MsgTimer = INVALID_HANDLE;
+
 		#if debug
-		CPrintToChatAll("%s Kill timer", TAG)
+		CPrintToChatAll("%s Kill timer", TAG);
 		#endif
 	}
 	if (TankFightClubTimer != INVALID_HANDLE){
-		KillTimer(TankFightClubTimer)
-		TankFightClubTimer = INVALID_HANDLE
-		
+		KillTimer(TankFightClubTimer);
+		TankFightClubTimer = INVALID_HANDLE;
+
 		#if debug
-		CPrintToChatAll("%s Kill timer spawntank", TAG)
+		CPrintToChatAll("%s Kill timer spawntank", TAG);
 		#endif
 	}
 	if (club == true){
-	
-		TankFightClub()
+
+		TankFightClub();
 	}
 }
 
 /*////////////////////////
 	= Tank Fight Club =
 *////////////////////////
-public TankFightClub()
+TankFightClub()
 {
-	block3 = true
-	CPrintToChatAll("{green}Game Started!")
-	PrintHintTextToAll("Fight!")
-	EmitSoundToAll(SOUND_FIGHT)
-	CheatCommand(GetRandomClient(), "director_force_panic_event")
-	TankFightClubTimer=CreateTimer(5.0, SpawnTank, _, TIMER_REPEAT)
+	block3 = true;
+	CPrintToChatAll("{green}Game Started!");
+	PrintHintTextToAll("Fight!");
+	EmitSoundToAll(SOUND_FIGHT);
+	CheatCommand(GetRandomClient(), "director_force_panic_event");
+	TankFightClubTimer=CreateTimer(5.0, SpawnTank, _, TIMER_REPEAT);
 }
 
 /*////////////////////////
    = Expanded Edition =
 *////////////////////////
-public ExpandedEditionEnable()
+ExpandedEditionEnable()
 {
 	g_CvarSupport = GetConVarInt(g_support);
-	
+
 	if (g_CvarSupport == 1 && g_CvarEnable == 1){
-		
-		ExpandedEdition(true)
+
+		ExpandedEdition(true);
 	}
 }
 
-public ExpandedEdition(bool:status)
+ExpandedEdition(bool:status)
 {
 	if( ST == INVALID_HANDLE )
-		ST = FindConVar("st_on")
+		ST = FindConVar("st_on");
 	if( STF == INVALID_HANDLE )
-		STF = FindConVar("st_finale_only")
+		STF = FindConVar("st_finale_only");
 	if( STI == INVALID_HANDLE )
-		STI = FindConVar("st_display_health")
+		STI = FindConVar("st_display_health");
 	if( ST1 == INVALID_HANDLE )
-		ST1 = FindConVar("st_wave1_tanks")
+		ST1 = FindConVar("st_wave1_tanks");
 	if( ST2 == INVALID_HANDLE )
-		ST2 = FindConVar("st_wave2_tanks")
+		ST2 = FindConVar("st_wave2_tanks");
 	if( ST3 == INVALID_HANDLE )
-		ST3 = FindConVar("st_wave3_tanks")
+		ST3 = FindConVar("st_wave3_tanks");
 
 	if (status){
-	
-		SetConVarInt(ST, 0)
-		SetConVarInt(STF, 0)
-		SetConVarInt(STI, 0)
-		SetConVarInt(ST1, 0)
-		SetConVarInt(ST2, 0)
-		SetConVarInt(ST3, 0)
+
+		SetConVarInt(ST, 0);
+		SetConVarInt(STF, 0);
+		SetConVarInt(STI, 0);
+		SetConVarInt(ST1, 0);
+		SetConVarInt(ST2, 0);
+		SetConVarInt(ST3, 0);
 	}
 }
 
-public KO()
-{		
+KO()
+{
 	if (g_CvarKo == 1  && KOblock2 == false && TankLive != 0){
-		KOblock = true
-		TanksKO()
+		KOblock = true;
+		TanksKO();
 
 		for( new i = 1; i <= MaxClients; i++ )
 		{
-			if( IsClientInGame(i) && GetClientTeam(i) == 3 && IsPlayerAlive(i) && GetEntProp(i, Prop_Send, "m_zombieClass") == 8 )
+			if( IsClientInGame(i) && GetClientTeam(i) == 3 && IsPlayerAlive(i) && IsPlayerTank(i) )
 			{
 				ForcePlayerSuicide(i);
 			}
 		}
 
-		KOblock = false
+		KOblock = false;
 	}
 }
 
-public TanksKO()
+TanksKO()
 {
 	if (g_CvarInfo == 0)
-		return
-	CPrintToChatAll("%s {olive}Tanks K.O! -%d", FC, TankLive)
+		return;
+	CPrintToChatAll("%s {olive}Tanks K.O! -%d", FC, TankLive);
 }
 /*////////////////////////
 		= Cmd =
 *////////////////////////
 public Action:CmdCount(client, agrs)
 {
-	CPrintToChat(client, "%s Round: {olive}%d{default}, Tanks Killed: {blue}%d{default}, TankOnMap: {green}%d", FC, n, TankCount, TankLive)
-	return Plugin_Handled
+	CPrintToChat(client, "%s Round: {olive}%d{default}, Tanks Killed: {blue}%d{default}, TankOnMap: {green}%d", FC, n, TankCount, TankLive);
+	return Plugin_Handled;
 }
 
 public Action:CmdSlay(client, agrs)
 {
-	CPrintToChat(client, "%s {blue}Trying to kill Tanks...", FC)
+	CPrintToChat(client, "%s {blue}Trying to kill Tanks...", FC);
 	if (KOblock == false){
-	
+
 		if (TankLive != 0)
 		{
-			KOblock2 = true
-			CPrintToChat(client, "%s {olive}Successfully! -%d", FC, TankLive)
-		
+			KOblock2 = true;
+			CPrintToChat(client, "%s {olive}Successfully! -%d", FC, TankLive);
+
 			for( new i = 1; i <= MaxClients; i++ )
 			{
-				if( IsClientInGame(i) && GetClientTeam(i) == 3 && IsPlayerAlive(i) && GetEntProp(i, Prop_Send, "m_zombieClass") == 8 )
+				if( IsClientInGame(i) && GetClientTeam(i) == 3 && IsPlayerAlive(i) && IsPlayerTank(i) )
 				{
 					ForcePlayerSuicide(i);
 				}
 			}
-			KOblock2 = false
+			KOblock2 = false;
 		}
 		else {
-	
-			CPrintToChat(client, "%s {blue}Can't, no target!", FC)
+
+			CPrintToChat(client, "%s {blue}Can't, no target!", FC);
 		}
 	}
 	if (KOblock == true){
-	
-		CPrintToChat(client, "%s {blue}Can't, try again later...", FC)
+
+		CPrintToChat(client, "%s {blue}Can't, try again later...", FC);
 	}
-	return Plugin_Handled
+	return Plugin_Handled;
 }
+
+bool:IsPlayerTank(i)
+{
+	return GetEntProp(i, Prop_Send, "m_zombieClass") == (L4D2 ? 8 : 5);
+}
+
 /*////////////////////////
 		= Message =
 *////////////////////////
-public Info()
+Info()
 {
 	if (g_CvarInfo == 0)
-		return
-		
-	EmitSoundToAll(SOUND_TANK)
-	
-	if (g_CvarInfo == 1 || g_CvarInfo == 3){	
-	
-	new i = g_CvarRound1 - TankCount;
-	new a = g_CvarRound2 + g_CvarRound1;
-	new b = a + g_CvarRound3;
-	new c = b + g_CvarRound4;
-	new d = c + g_CvarRound5;
-	new e = d +	g_CvarRound6;
-	new f = e +	g_CvarRound7;
-	new a1 = a - TankCount;
-	new b2 = b - TankCount;
-	new c3 = c - TankCount;
-	new d4 = d - TankCount;
-	new e5 = e - TankCount;
-	new f6 = f - TankCount;
-	
-	if (n == 0){
-	
-		if (g_CvarInfo == 3)
+		return;
+
+	EmitSoundToAll(SOUND_TANK);
+
+	if (g_CvarInfo == 1 || g_CvarInfo == 3){
+
+		new i = g_CvarRound1 - TankCount;
+		new a = g_CvarRound2 + g_CvarRound1;
+		new b = a + g_CvarRound3;
+		new c = b + g_CvarRound4;
+		new d = c + g_CvarRound5;
+		new e = d +	g_CvarRound6;
+		new f = e +	g_CvarRound7;
+		new a1 = a - TankCount;
+		new b2 = b - TankCount;
+		new c3 = c - TankCount;
+		new d4 = d - TankCount;
+		new e5 = e - TankCount;
+		new f6 = f - TankCount;
+
+		switch (n)
 		{
-			CPrintToChatAll("{olive}Tanks: {default}%d/%d", TankRound, g_CvarRound1)
-		}
-		else 
-		{
-			CPrintToChatAll("{blue}Tanks: {default}%d", i)
+			case 0:
+			{
+				if (g_CvarInfo == 3)
+				{
+					CPrintToChatAll("{olive}Tanks: {default}%d/%d", TankRound, g_CvarRound1);
+				}
+				else
+				{
+					CPrintToChatAll("{blue}Tanks: {default}%d", i);
+				}
+			}
+			case 1:
+			{
+				if (g_CvarInfo == 3)
+				{
+					CPrintToChatAll("{olive}Tanks: {default}%d/%d", TankRound, g_CvarRound2);
+				}
+				else
+				{
+					CPrintToChatAll("{blue}Tanks: {default}%d", a1);
+				}
+			}
+			case 2:
+			{
+				if (g_CvarInfo == 3)
+				{
+					CPrintToChatAll("{olive}Tanks: {default}%d/%d", TankRound, g_CvarRound3);
+				}
+				else
+				{
+					CPrintToChatAll("{blue}Tanks: {default}%d", b2);
+				}
+			}
+			case 3:
+			{
+				if (g_CvarInfo == 3)
+				{
+					CPrintToChatAll("{olive}Tanks: {default}%d/%d", TankRound, g_CvarRound4);
+				}
+				else
+				{
+					CPrintToChatAll("{blue}Tanks: {default}%d", c3);
+				}
+			}
+			//
+			case 4:
+			{
+				if (g_CvarInfo == 3 && g_CvarExtra == 1)
+				{
+					CPrintToChatAll("{olive}Tanks: {default}%d/%d", TankRound, g_CvarRound5);
+				}
+				if (g_CvarInfo == 3 && g_CvarExtra == 0)
+				{
+					CPrintToChatAll("{olive}Total Tanks: {default}%d", TankRound);
+				}
+				if (g_CvarInfo == 1 && g_CvarExtra == 1)
+				{
+					CPrintToChatAll("{blue}Tanks: {default}%d", d4);
+				}
+				if (g_CvarInfo == 1 && g_CvarExtra == 0)
+				{
+					CPrintToChatAll("{olive}Total Tanks: {default}%d", TankRound);
+				}
+			}
+			case 5:
+			{
+				if (g_CvarInfo == 3 && g_CvarExtra == 1)
+				{
+					CPrintToChatAll("{olive}Tanks: {default}%d/%d", TankRound, g_CvarRound6);
+				}
+				else
+				{
+					CPrintToChatAll("{blue}Tanks: {default}%d", e5);
+				}
+			}
+			case 6:
+			{
+				if (g_CvarInfo == 3 && g_CvarExtra == 1)
+				{
+					CPrintToChatAll("{olive}Tanks: {default}%d/%d", TankRound, g_CvarRound7);
+				}
+				else
+				{
+					CPrintToChatAll("{blue}Tanks: {default}%d", f6);
+				}
+			}
+			case 7:
+			{
+				CPrintToChatAll("{olive}Total Tanks: {default}%d", TankRound);
+			}
 		}
 	}
-	if (n == 1){
-	
-		if (g_CvarInfo == 3)
-		{
-			CPrintToChatAll("{olive}Tanks: {default}%d/%d", TankRound, g_CvarRound2)
-		}
-		else 
-		{
-			CPrintToChatAll("{blue}Tanks: {default}%d", a1)
-		}
-	}	
-	if (n == 2){
-	
-		if (g_CvarInfo == 3)
-		{
-			CPrintToChatAll("{olive}Tanks: {default}%d/%d", TankRound, g_CvarRound3)
-		}
-		else 
-		{
-			CPrintToChatAll("{blue}Tanks: {default}%d", b2)
-		}
-	}
-	if (n == 3){
-	
-		if (g_CvarInfo == 3)
-		{
-			CPrintToChatAll("{olive}Tanks: {default}%d/%d", TankRound, g_CvarRound4)
-		}
-		else 
-		{
-			CPrintToChatAll("{blue}Tanks: {default}%d", c3)
-		}
-	}
-	//
-	if (n == 4){
-	
-		if (g_CvarInfo == 3 && g_CvarExtra == 1)
-		{
-			CPrintToChatAll("{olive}Tanks: {default}%d/%d", TankRound, g_CvarRound5)
-		}
-		if (g_CvarInfo == 3 && g_CvarExtra == 0)
-		{
-			CPrintToChatAll("{olive}Total Tanks: {default}%d", TankRound)
-		}
-		if (g_CvarInfo == 1 && g_CvarExtra == 1) 
-		{
-			CPrintToChatAll("{blue}Tanks: {default}%d", d4)
-		}
-		if (g_CvarInfo == 1 && g_CvarExtra == 0) 
-		{	
-			CPrintToChatAll("{olive}Total Tanks: {default}%d", TankRound)
-		}
-	}	
-	if (n == 5){
-	
-		if (g_CvarInfo == 3 && g_CvarExtra == 1)
-		{
-			CPrintToChatAll("{olive}Tanks: {default}%d/%d", TankRound, g_CvarRound6)
-		}
-		else 
-		{
-			CPrintToChatAll("{blue}Tanks: {default}%d", e5)
-		}
-	}
-	if (n == 6){
-	
-		if (g_CvarInfo == 3 && g_CvarExtra == 1)
-		{
-			CPrintToChatAll("{olive}Tanks: {default}%d/%d", TankRound, g_CvarRound7)
-		}
-		else 
-		{
-			CPrintToChatAll("{blue}Tanks: {default}%d", f6)
-		}
-	}
-	if (n == 7)
-		{	
-			CPrintToChatAll("{olive}Total Tanks: {default}%d", TankRound)
-		}
-	}
-		
 	if (g_CvarInfo == 2){
-	
-			CPrintToChatAll("{green}Tanks Killed: {default}%d", TankCount)
+
+			CPrintToChatAll("{green}Tanks Killed: {default}%d", TankCount);
 	}
 }
 
@@ -674,7 +719,7 @@ public OnConfigsExecuted()
 	ExpandedEditionEnable();
 }
 
-public GetCVars()
+GetCVars()
 {
 	g_CvarInfo = GetConVarInt(g_info);
 	g_CvarHealth = GetConVarInt(g_health);
@@ -701,91 +746,91 @@ public GetCVars()
 /*////////////////////////
 	= Enable\Disable =
 *////////////////////////
-public Director()
+Director()
 {
 	g_CvarZombie = GetConVarInt(g_zombie);
-	
+
 	if (g_CvarZombie == 1){
-		DirectorEnable(true)
+		DirectorEnable(true);
 	}
 	else if (g_CvarZombie == 0){
-		DirectorEnable(false)
+		DirectorEnable(false);
 	}
 }
 
 DirectorEnable(bool:status)
 {
 	if (status){
-		SetConVarInt(bosses, 1)
-		SetConVarInt(specials, 1)
-		SetConVarInt(mobs, 1)
-		SetConVarInt(zombie, 0)
+		SetConVarInt(bosses, 1);
+		SetConVarInt(specials, 1);
+		SetConVarInt(mobs, 1);
+		SetConVarInt(zombie, 0);
 	}
 	else {
-		SetConVarInt(bosses, 0)
-		SetConVarInt(specials, 0)
-		SetConVarInt(mobs, 0)
+		SetConVarInt(bosses, 0);
+		SetConVarInt(specials, 0);
+		SetConVarInt(mobs, 0);
 		ResetConVar(zombie);
 	}
 }
 
-public Plugin()
+Plugin()
 {
 	g_CvarEnable = GetConVarInt(g_enable);
 
 	if (block5 == false && g_CvarEnable == 1){
 
 		#if debug
-		CPrintToChatAll("%s HookEvent", TAG)
+		CPrintToChatAll("%s HookEvent", TAG);
 		#endif
 
-		ExpandedEditionEnable()// SuperBoss	
+		ExpandedEditionEnable();// SuperBoss
 		HookEvent("tank_killed", TankKilled);
 		HookEvent("round_start", RoundStart);
 		HookEvent("create_panic_event", PanicEvent);
 		HookEvent("tank_spawn", NewTank);
-		block4 = false
-		block5 = true
+		block4 = false;
+		block5 = true;
 	}
 	else if (block5 == true && g_CvarEnable == 0){
 
 		#if debug
-		CPrintToChatAll("%s UnhookEvent", TAG)
+		CPrintToChatAll("%s UnhookEvent", TAG);
 		#endif
 
-		Triger()// kill timer
+		Triger();// kill timer
 		ResetConVar(tankhp);
 		UnhookEvent("tank_killed", TankKilled);
 		UnhookEvent("round_start", RoundStart);
 		UnhookEvent("create_panic_event", PanicEvent);
-		UnhookEvent("tank_spawn", NewTank)
-		block4 = true
-		block5 = false
+		UnhookEvent("tank_spawn", NewTank);
+		block4 = true;
+		block5 = false;
 	}
 }
 
-public ResetValues()
+ResetValues()
 {
 	//reset
-	TankLive = 0
-	TankCount = 0
-	TankRound = 0
-	n = 0
-	m = 0
-	club = false
-	block = false
-	block3 = false
+	TankLive = 0;
+	TankCount = 0;
+	TankRound = 0;
+	n = 0;
+	m = 0;
+	club = false;
+	block = false;
+	block3 = false;
 	//kill timer
-	Triger()
+	Triger();
 	//reset hp
 	SetConVarInt(tankhp, g_CvarHealth);
 	//start timer
-	MsgTimer=CreateTimer(15.0, PrintMsg, _, TIMER_REPEAT)
+	MsgTimer=CreateTimer(15.0, PrintMsg, _, TIMER_REPEAT);
 	Director();
 	ExpandedEditionEnable();
 
 	#if debug
-	CPrintToChatAll("%s Restart_Round: TankHp = {green}%d{default}, TankCount = {green}%d{default}, TankRound = {green}%d{default}, TankLive = {green}%d", TAG, GetConVarInt(tankhp), TankCount, TankRound, TankLive)
+	CPrintToChatAll("%s Restart_Round: TankHp = {green}%d{default}, TankCount = {green}%d{default}, TankRound = {green}%d{default}, TankLive = {green}%d", TAG, GetConVarInt(tankhp), TankCount, TankRound, TankLive);
 	#endif
 }
 
@@ -795,13 +840,10 @@ public ResetValues()
 CheatCommand(client, const String:command[], const String:arguments[]="")
 {
 	if (!client) return;
-	new admindata = GetUserFlagBits(client);
-	SetUserFlagBits(client, ADMFLAG_ROOT);
 	new flags = GetCommandFlags(command);
 	SetCommandFlags(command, flags & ~FCVAR_CHEAT);
 	FakeClientCommand(client, "%s %s", command, arguments);
 	SetCommandFlags(command, flags);
-	SetUserFlagBits(client, admindata);
 }
 
 GetRandomClient()
