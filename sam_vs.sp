@@ -89,14 +89,9 @@ public SAM_ev_RoundEnd(Handle:event, String:event_name[], bool:dontBroadcast)
 {
 	if (g_bCvarKickF && ++g_iRoundEnd == PRE_MAPCHANGE_COUNT){
 
-		for (new i = 1; i <= MaxClients; i++){
-			if (g_hTimer[i] != INVALID_HANDLE){
-
-				LogMessage("kick afk due mapchanged %N", i);
-
+		for (new i = 1; i <= MaxClients; i++)
+			if (g_hTimer[i] != INVALID_HANDLE)
 				SAM_t_ActionKick(INVALID_HANDLE, i);
-			}
-		}
 	}
 }
 
