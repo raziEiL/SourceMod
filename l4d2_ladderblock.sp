@@ -1,4 +1,4 @@
-#define PLUGIN_VERSION 		"1.0"
+#define PLUGIN_VERSION "1.1"
 
 /*
  * ============================================================================
@@ -37,35 +37,55 @@
 
 public Plugin:myinfo =
 {
-	name = "StopTrolls",
+	name = "[L4D2] No Ladder Block",
 	author = "raziEiL [disawar1]",
 	description = "Prevents people from blocking players who climb on the ladder.",
 	version = PLUGIN_VERSION,
 	url = "http://steamcommunity.com/id/raziEiL"
 }
 
-static		Handle:g_hFlags, Handle:g_hImmune, g_iCvarFlags, g_iCvarImmune, bool:g_bLoadLate;
+static g_iCvarFlags, g_iCvarImmune, bool:g_bInCharge[MAXPLAYERS+1], bool:g_bLoadLate;
 
 public OnPluginStart()
 {
-	CreateConVar("stop_trolls_version", PLUGIN_VERSION, "StopTrolls plugin version", FCVAR_REPLICATED|FCVAR_NOTIFY);
+	CreateConVar("l4d2_ladderblock_version", PLUGIN_VERSION, "No Ladder Block plugin version", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_NOTIFY|FCVAR_DONTRECORD);
 
-	g_hFlags = CreateConVar("stop_trolls_flags", "862", "Who can push trolls when climbs on the ladder. 0=Disable, 2=Smoker, 4=Boomer, 8=Hunter, 16=Spitter, 64=Charger, 256=Tank, 512=Survivors, 862=All");
-	g_hImmune = CreateConVar("stop_trolls_immune", "256", "What class is immune. 0=Disable, 2=Smoker, 4=Boomer, 8=Hunter, 16=Spitter, 32=Jockey, 64=Charger, 256=Tank, 512=Survivors, 894=All");
-	//AutoExecConfig(true, "StopTrollss"); // If u want a cfg file uncomment it. But I don't like.
+	new Handle:g_hCvarFlags = CreateConVar("l4d2_ladderblock_flags", "862", "Who can push trolls when climbs on the ladder. Flags (add together): 0=Disable, 2=Smoker, 4=Boomer, 8=Hunter, 16=Spitter, 64=Charger, 256=Tank, 512=Survivors, 862=All", FCVAR_PLUGIN, true, 0.0, true, 862.0);
+	new Handle:g_hCvarImmune = CreateConVar("l4d2_ladderblock_immune", "256", "What class is immune. Flags (add together): 0=Disable, 2=Smoker, 4=Boomer, 8=Hunter, 16=Spitter, 32=Jockey, 64=Charger, 256=Tank, 512=Survivors, 894=All", FCVAR_PLUGIN, true, 0.0, true, 894.0);
+	//AutoExecConfig(true, "l4d2_ladderblock"); // If u want a cfg file uncomment it. But I don't like.
 
-	HookConVarChange(g_hFlags, OnCvarChange_Flags);
-	HookConVarChange(g_hImmune, OnCvarChange_Immune);
-	ST_GetCvars();
+	g_iCvarFlags = GetConVarInt(g_hCvarFlags);
+	g_iCvarImmune = GetConVarInt(g_hCvarImmune);
+
+	HookConVarChange(g_hCvarFlags, OnCvarChange_Flags);
+	HookConVarChange(g_hCvarImmune, OnCvarChange_Immune);
+
+	HookEvent("charger_charge_start", LB_ev_ChargeStart);
+	HookEvent("charger_charge_end", LB_ev_ChargeEnd);
 
 	if (g_iCvarFlags && g_bLoadLate)
-		ST_ToogleHook(true);
+		LB_ToogleHook(true);
 }
 
 public OnClientPutInServer(client)
 {
-	if (g_iCvarFlags && client)
-		SDKHook(client, SDKHook_Touch, SDKHook_cb_Touch);
+	if (client){
+
+		g_bInCharge[client] = false;
+
+		if (g_iCvarFlags)
+			SDKHook(client, SDKHook_Touch, SDKHook_cb_Touch);
+	}
+}
+
+public LB_ev_ChargeStart(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	g_bInCharge[GetClientOfUserId(GetEventInt(event, "userid"))] = true;
+}
+
+public LB_ev_ChargeEnd(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	g_bInCharge[GetClientOfUserId(GetEventInt(event, "userid"))] = false;
 }
 
 public Action:SDKHook_cb_Touch(entity, other)
@@ -83,7 +103,7 @@ public Action:SDKHook_cb_Touch(entity, other)
 
 			iClass = GetEntProp(other, Prop_Send, "m_zombieClass");
 
-			if (g_iCvarImmune & (1 << iClass)) return;
+			if (g_iCvarImmune & (1 << iClass) || g_bInCharge[other]) return;
 
 			if (IsOnLadder(other)){
 
@@ -108,7 +128,7 @@ bool:IsOnLadder(entity)
 	return GetEntityMoveType(entity) == MOVETYPE_LADDER;
 }
 
-ST_ToogleHook(bool:bHook)
+LB_ToogleHook(bool:bHook)
 {
 	for (new i = 1; i <= MaxClients; i++){
 
@@ -121,28 +141,22 @@ ST_ToogleHook(bool:bHook)
 	}
 }
 
-public OnCvarChange_Flags(Handle:convar_hndl, const String:oldValue[], const String:newValue[])
+public OnCvarChange_Flags(Handle:convar, const String:oldValue[], const String:newValue[])
 {
 	if (StrEqual(oldValue, newValue)) return;
 
-	g_iCvarFlags = GetConVarInt(g_hFlags);
+	g_iCvarFlags = GetConVarInt(convar);
 
 	if (!StringToInt(oldValue))
-		ST_ToogleHook(true);
+		LB_ToogleHook(true);
 	else if (!g_iCvarFlags)
-		ST_ToogleHook(false);
+		LB_ToogleHook(false);
 }
 
-public OnCvarChange_Immune(Handle:convar_hndl, const String:oldValue[], const String:newValue[])
+public OnCvarChange_Immune(Handle:convar, const String:oldValue[], const String:newValue[])
 {
 	if (!StrEqual(oldValue, newValue))
-		g_iCvarImmune = GetConVarInt(g_hImmune);
-}
-
-ST_GetCvars()
-{
-	g_iCvarFlags = GetConVarInt(g_hFlags);
-	g_iCvarImmune = GetConVarInt(g_hImmune);
+		g_iCvarImmune = GetConVarInt(convar);
 }
 
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
