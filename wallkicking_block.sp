@@ -1,4 +1,4 @@
-#define PLUGIN_VERSION "1.1"
+#define PLUGIN_VERSION "1.2"
 
 #pragma semicolon 1
 
@@ -20,7 +20,7 @@ public Plugin:myinfo =
 
 #define GROUND_POST_TIME 0.3
 
-static  Handle:g_hTrickTimer[MAXPLAYERS+1], Float:g_fCvarPounceCrouchDelay, bool:g_bCvarPluginMode;
+static  Handle:g_hTrickTimer[MAXPLAYERS+1], Float:g_fCvarPounceCrouchDelay, bool:g_bCvarPluginMode, bool:g_bTempLock[MAXPLAYERS+1];
 
 public OnPluginStart()
 {
@@ -46,9 +46,23 @@ public Action:OnPlayerRunCmd(client, &buttons)
 		if (buttons & IN_JUMP && IsAttemptingToTrick(client))
 			RunTrickChecking(client);
 
-		if (g_hTrickTimer[client] != INVALID_HANDLE)
+		if (g_hTrickTimer[client] != INVALID_HANDLE){
+
 			buttons &= ~IN_ATTACK;
+
+			if (!g_bTempLock[client] && !IsPlayerGhost(client)){
+
+				g_bTempLock[client] = true;
+				PrintToChat(client, "\x03wallkicking is forbidden!");
+				CreateTimer(5.0, WB_t_UnlockMsg, client);
+			}
+		}
 	}
+}
+
+public Action:WB_t_UnlockMsg(Handle:timer, any:client)
+{
+	g_bTempLock[client] = false;
 }
 
 public WK_ev_PlayerJump(Handle:event, const String:name[], bool:dontBroadcast)
@@ -93,7 +107,7 @@ RunTrickChecking(client)
 	g_hTrickTimer[client] = CreateTimer(g_fCvarPounceCrouchDelay, WK_t_BlockWallKick, client, TIMER_REPEAT);
 
 #if debug
-	PrintToChat(client, "%f start checking", GetEngineTime())
+	PrintToChat(client, "%f start checking", GetEngineTime());
 #endif
 }
 
@@ -108,7 +122,7 @@ public Action:WK_t_GodModFix(Handle:timer, any:client)
 
 public Action:WK_t_BlockWallKick(Handle:timer, any:client)
 {
-	if (IsClientInGame(client) && IsPlayerHunter(client) && IsInfectedAlive(client)){
+	if (IsClientInGame(client) && IsPlayerHunter(client)){
 
 		if (GetEntityFlags(client) & FL_ONGROUND){
 
@@ -133,7 +147,7 @@ public Action:WK_t_StopTrickChecking(Handle:timer, any:client)
 
 bool:IsPlayerHunter(client)
 {
-	return GetPlayerClass(client) == 3;
+	return GetClientTeam(client) == 3 && IsInfectedAlive(client) && GetPlayerClass(client) == ZC_HUNTER;
 }
 
 bool:IsAttemptingToTrick(client)
