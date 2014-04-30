@@ -20,7 +20,7 @@ public Plugin:myinfo =
 
 #define GROUND_POST_TIME 0.3
 
-static  Handle:g_hTrickTimer[MAXPLAYERS+1], Float:g_fCvarPounceCrouchDelay, bool:g_bCvarPluginMode, bool:g_bTempLock[MAXPLAYERS+1];
+static  Handle:g_hTrickTimer[MAXPLAYERS+1], Float:g_fCvarPounceCrouchDelay, bool:g_bPluginEnabled, bool:g_bCvarPluginMode, bool:g_bTempLock[MAXPLAYERS+1];
 
 public OnPluginStart()
 {
@@ -41,7 +41,7 @@ public OnPluginStart()
 
 public Action:OnPlayerRunCmd(client, &buttons)
 {
-	if (!g_bCvarPluginMode && buttons & IN_ATTACK){
+	if (g_bPluginEnabled && !g_bCvarPluginMode && buttons & IN_ATTACK){
 
 		if (buttons & IN_JUMP && IsAttemptingToTrick(client))
 			RunTrickChecking(client);
@@ -180,6 +180,7 @@ GetPounceCrouchDealyCvar(Handle:convar)
 
 TooglePluginStateEvent(bool:hook)
 {
+	g_bPluginEnabled = hook;
 	static bool:bHooked;
 
 	if (!bHooked && hook){
