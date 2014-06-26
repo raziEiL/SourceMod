@@ -50,7 +50,7 @@ public OnPluginStart()
 
 public Action:VPF_cmdh_Vote(client, const String:command[], argc)
 {
-	if (g_bVotePoolFixTriggered && GetClientTeam(client) == 1)
+	if (g_bVotePoolFixTriggered && IsClientInGame(client) && GetClientTeam(client) == 1)
 		return Plugin_Handled;
 
 	return Plugin_Continue;

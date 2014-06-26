@@ -248,7 +248,7 @@ public Action:SAM_t_ActionKick(Handle:timer, any:client)
 		PrintToChatAll("[debug] SAM_t_ActionKick(%N) Kick player", client);
 	#endif
 
-	if (!bWhoAmI(client))
+	if (IsClientInGame(client) && !bWhoAmI(client))
 		KickClient(client, "You were kicked for being AFK too long");
 
 	g_hTimer[client] = INVALID_HANDLE;
