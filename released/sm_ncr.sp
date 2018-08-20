@@ -1,6 +1,7 @@
 #define PLUGIN_VERSION "1.0"
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #include <sourcemod>
 
@@ -43,6 +44,7 @@ public OnPluginStart()
 
 	if (g_bLoadLate && GetFeatureStatus(FeatureType_Native, "BaseComm_IsClientGagged") == FeatureStatus_Available)
 		g_bBasecommLib = true;
+
 }
 
 public OnLibraryAdded(const String:name[])
