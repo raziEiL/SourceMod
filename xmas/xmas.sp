@@ -154,9 +154,13 @@ public Action:XM_t_CreateSnowFall(Handle:timer)
 {
 	new iEnt = -1;
 
-	if (g_bCvarSnowFix)
+	if (g_bCvarSnowFix){
+
 		while ((iEnt = FindEntityByClassname(iEnt , "func_precipitation")) != INVALID_ENT_REFERENCE)
 			AcceptEntityInput(iEnt, "Kill");
+		while ((iEnt = FindEntityByClassname(iEnt , "func_precipitation_blocker")) != INVALID_ENT_REFERENCE)
+			AcceptEntityInput(iEnt, "Kill");
+	}
 
 	iEnt = -1;
 	iEnt = CreateEntityByName("func_precipitation");
