@@ -1,4 +1,4 @@
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -54,6 +54,13 @@ public Plugin myinfo =
 	description = "Provides to Special Infected the ability to slap and shove Survivors.",
 	version = PLUGIN_VERSION,
 	url = "http://steamcommunity.com/id/raziEiL"
+}
+
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
+{
+	if (IsL4DGameEx())
+		MarkNativeAsOptional("L4D2_CTerrorPlayer_Fling");
+	return APLRes_Success;
 }
 
 public void OnPluginStart()
