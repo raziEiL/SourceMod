@@ -1,4 +1,4 @@
-#define PLUGIN_VERSION "1.1.1"
+#define PLUGIN_VERSION "1.2"
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -10,12 +10,12 @@
 #include <l4d_lib>
 
 #define DEBUG 0
-#define PAIN_SOUND_LEN 54
-#define L4D_Z_MULT 1.6
 #define HAS_BIT(%0,%1,%2) (%0 && %1 & (1 << %2))
 // --------------------------------------------------------------
 // CONST
 // --------------------------------------------------------------
+const int PAIN_SOUND_LEN = 54;
+static const float L4D_Z_MULT = 1.6;
 static const int SOUND_MIN = 1;
 static const int SOUND_MAX[sizeof(L4D2_LIB_SURVIVOR_CHARACTER)] = {7 ,4, 8, 6, 9, 7, 11, 5};
 static const char FORMAT_PAIN_SOUND[] = "player/survivor/voice/%s/hurtcritical0%d.wav";
@@ -41,9 +41,16 @@ static const char INFECTED_CLAW[][]=
 // --------------------------------------------------------------
 // GLOBAL VARS
 // --------------------------------------------------------------
+enum
+{
+	Ability_Shove,
+	Ability_Slap,
+	Ability_Size
+}
+
 bool g_bCvarEnabled;
-int g_iCvarSlapFlags, g_iCvarShoveFlags, g_iCvarIncapFlags, g_iCvarAnnounce;
-float g_fCvarPower, g_fCvarZMult, g_fCvarCooldown, g_fLastSlapTime[MPS];
+int g_iCvarFlags[Ability_Size], g_iCvarIncapFlags, g_iCvarAnnounce;
+float g_fCvarPower, g_fCvarZMult, g_fCvarAbilityCooldown[Ability_Size], g_fCooldownExpires[MPS];
 // --------------------------------------------------------------
 // CORE
 // --------------------------------------------------------------
@@ -79,9 +86,13 @@ public void OnPluginStart()
 	g_fCvarZMult = cVar.FloatValue;
 	cVar.AddChangeHook(OnCvarChange_ZMult);
 
-	cVar = CreateConVar("l4d_si_ability_cooldown", "1.0", "0=Off, >0: Seconds before SI can slap/shove again.", FCVAR_NOTIFY, true, 0.0);
-	g_fCvarCooldown = cVar.FloatValue;
-	cVar.AddChangeHook(OnCvarChange_Cooldown);
+	cVar = CreateConVar("l4d_si_ability_cooldown_slap", "1.0", "0=Off, >0: Seconds before SI can slap again.", FCVAR_NOTIFY, true, 0.0);
+	g_fCvarAbilityCooldown[Ability_Slap] = cVar.FloatValue;
+	cVar.AddChangeHook(OnCvarChange_SlapCooldown);
+
+	cVar = CreateConVar("l4d_si_ability_cooldown_shove", "1.0", "0=Off, >0: Seconds before SI can shove again.", FCVAR_NOTIFY, true, 0.0);
+	g_fCvarAbilityCooldown[Ability_Shove] = cVar.FloatValue;
+	cVar.AddChangeHook(OnCvarChange_ShoveCooldown);
 
 	cVar = CreateConVar("l4d_si_ability_announce", "1", "0=Off, 1=Chat, 2=Center chat, 3=Hint.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	g_iCvarAnnounce = cVar.IntValue;
@@ -92,14 +103,16 @@ public void OnPluginStart()
 	cVar.AddChangeHook(OnCvarChange_IncapFlags);
 
 	cVar = CreateConVar("l4d_si_ability_slap", "68", "Special Infected who can slap. Add numbers together: 0=Off, 2=Smoker, 4=Boomer, 8=Hunter, 16=Spitter, 32=Jockey, 64=Charger, 126=All. Default: Boomer|Charger.", FCVAR_NOTIFY, true, 0.0, true, 126.0);
-	g_iCvarSlapFlags = cVar.IntValue;
+	g_iCvarFlags[Ability_Slap] = cVar.IntValue;
 	cVar.AddChangeHook(OnCvarChange_SlapFlags);
 
 	cVar = CreateConVar("l4d_si_ability_shove", "18", "Special Infected who can shove. Add numbers together: 0=Off, 2=Smoker, 4=Boomer, 8=Hunter, 16=Spitter, 32=Jockey, 64=Charger, 126=All. Default: Smoker|Spitter.", FCVAR_NOTIFY, true, 0.0, true, 126.0);
-	g_iCvarShoveFlags = cVar.IntValue;
+	g_iCvarFlags[Ability_Shove] = cVar.IntValue;
 	cVar.AddChangeHook(OnCvarChange_ShoveFlags);
 
 	HookEvent("player_hurt", Event_PlayerHurt);
+	HookEvent("player_death", Event_PlayerDeath);
+
 	AutoExecConfig(true, "l4d_si_ability");
 #if DEBUG
 	RegServerCmd("sm_si_ability_cvar", CommandCvar);
@@ -122,6 +135,12 @@ public void OnMapStart()
 	}
 }
 
+public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
+{
+	if (!g_bCvarEnabled) return;
+	g_fCooldownExpires[CID(event.GetInt("userid"))] = 0.0;
+}
+
 public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
 	if (!g_bCvarEnabled) return;
@@ -134,9 +153,9 @@ public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 
 	int class = GetPlayerClass(slapper);
 	bool bIncaped = IsIncaped(target);
-	bool bSlap = HAS_BIT(!bIncaped, g_iCvarSlapFlags, class) || HAS_BIT(bIncaped, g_iCvarIncapFlags, class);
+	bool bSlap = HAS_BIT(!bIncaped, g_iCvarFlags[Ability_Slap], class) || HAS_BIT(bIncaped, g_iCvarIncapFlags, class);
 
-	if (!(bSlap || HAS_BIT(!bIncaped, g_iCvarShoveFlags, class))) return;
+	if (!(bSlap || HAS_BIT(!bIncaped, g_iCvarFlags[Ability_Shove], class))) return;
 
 	char sWeapon[14];
 	event.GetString("weapon", SZF(sWeapon));
@@ -170,8 +189,9 @@ public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 			GetClientAbsOrigin(slapper, fPos);
 			L4D_StaggerPlayer(target, slapper, fPos);
 		}
-		if (g_fCvarCooldown)
-			g_fLastSlapTime[slapper] = GetEngineTime();
+
+		if (g_fCvarAbilityCooldown[bSlap])
+			g_fCooldownExpires[slapper] = GetEngineTime() + g_fCvarAbilityCooldown[bSlap];
 #if DEBUG
 		SetEntityHealth(target, 100);
 #endif
@@ -180,7 +200,7 @@ public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 
 bool CanSlapAgain(int client)
 {
-	return g_fCvarCooldown ? ((GetEngineTime() - g_fLastSlapTime[client]) > g_fCvarCooldown) : true;
+	return g_fCooldownExpires[client] ? FloatCompare(GetEngineTime(), g_fCooldownExpires[client]) != -1 : true;
 }
 
 void PlaySurvivorPainSound(int target)
@@ -247,10 +267,16 @@ public void OnCvarChange_ZMult(ConVar cVar, const char[] sOldVal, const char[] s
 		g_fCvarZMult = cVar.FloatValue;
 }
 
-public void OnCvarChange_Cooldown(ConVar cVar, const char[] sOldVal, const char[] sNewVal)
+public void OnCvarChange_SlapCooldown(ConVar cVar, const char[] sOldVal, const char[] sNewVal)
 {
 	if (!StrEqual(sOldVal, sNewVal))
-		g_fCvarCooldown = cVar.FloatValue;
+		g_fCvarAbilityCooldown[Ability_Slap] = cVar.FloatValue;
+}
+
+public void OnCvarChange_ShoveCooldown(ConVar cVar, const char[] sOldVal, const char[] sNewVal)
+{
+	if (!StrEqual(sOldVal, sNewVal))
+		g_fCvarAbilityCooldown[Ability_Shove] = cVar.FloatValue;
 }
 
 public void OnCvarChange_Announce(ConVar cVar, const char[] sOldVal, const char[] sNewVal)
@@ -268,13 +294,13 @@ public void OnCvarChange_IncapFlags(ConVar cVar, const char[] sOldVal, const cha
 public void OnCvarChange_SlapFlags(ConVar cVar, const char[] sOldVal, const char[] sNewVal)
 {
 	if (!StrEqual(sOldVal, sNewVal))
-		g_iCvarSlapFlags = cVar.IntValue;
+		g_iCvarFlags[Ability_Slap] = cVar.IntValue;
 }
 
 public void OnCvarChange_ShoveFlags(ConVar cVar, const char[] sOldVal, const char[] sNewVal)
 {
 	if (!StrEqual(sOldVal, sNewVal))
-		g_iCvarShoveFlags = cVar.IntValue;
+		g_iCvarFlags[Ability_Shove] = cVar.IntValue;
 }
 // --------------------------------------------------------------
 // DEBUG
@@ -292,11 +318,11 @@ public Action CommandCvar(int args)
 {
 	PrintToServer("l4d test");
 	for (int i = ZC_SMOKER; i <= ZC_HUNTER; i++){
-		PrintToServer("%d. fling %d, stagger %d, %s", i, g_iCvarSlapFlags & (1 << i), g_iCvarShoveFlags  & (1 << i), L4D_LIB_INFECTED_CHARACTER_NAME[i]);
+		PrintToServer("%d. fling %d, stagger %d, %s", i, g_iCvarFlags & (1 << i), g_iCvarShoveFlags  & (1 << i), L4D_LIB_INFECTED_CHARACTER_NAME[i]);
 	}
 	PrintToServer("l4d2 test");
 	for (int i = ZC2_SMOKER; i <= ZC2_CHARGER; i++){
-		PrintToServer("%d. fling %d, stagger %d, %s", i, g_iCvarSlapFlags & (1 << i), g_iCvarShoveFlags  & (1 << i), L4D2_LIB_INFECTED_CHARACTER_NAME[i]);
+		PrintToServer("%d. fling %d, stagger %d, %s", i, g_iCvarFlags & (1 << i), g_iCvarShoveFlags  & (1 << i), L4D2_LIB_INFECTED_CHARACTER_NAME[i]);
 	}
 }
 
