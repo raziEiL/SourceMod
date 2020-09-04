@@ -1,12 +1,12 @@
-#define PLUGIN_VERSION "1.1"
+#define PLUGIN_VERSION "1.1.1"
 
 #pragma semicolon 1
 #pragma newdecls required
 
 #include <sourcemod>
 #include <sdktools>
-#undef REQUIRE_PLUGIN
 #include <left4dhooks>
+#undef REQUIRE_PLUGIN
 #include <l4d_lib>
 
 #define DEBUG 0
@@ -177,7 +177,7 @@ public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 #endif
 	}
 }
-// AcceptEntityInput(target, "DisableLedgeHang");
+
 bool CanSlapAgain(int client)
 {
 	return g_fCvarCooldown ? ((GetEngineTime() - g_fLastSlapTime[client]) > g_fCvarCooldown) : true;
@@ -190,10 +190,7 @@ void PlaySurvivorPainSound(int target)
 
 	char painSound[PAIN_SOUND_LEN];
 	FormatEx(SZF(painSound), FORMAT_PAIN_SOUND, L4D2_LIB_SURVIVOR_CHARACTER[strIndex], GetRandomInt(SOUND_MIN, SOUND_MAX[strIndex]));
-
-	for (int i = 1; i <= MaxClients; i++)
-		if (IsClientInGame(i) && !IsFakeClient(i))
-			EmitSoundToClient(i, painSound, target, SNDCHAN_AUTO, SNDLEVEL_GUNFIRE);
+	EmitSoundToAll(painSound, target, _, SNDLEVEL_SCREAMING);
 }
 
 void Print(int slapper, int target, bool type, bool allChat = true)
