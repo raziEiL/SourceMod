@@ -1,4 +1,4 @@
-#define PLUGIN_VERSION "1.2"
+#define PLUGIN_VERSION "1.3"
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -94,7 +94,7 @@ public void OnPluginStart()
 	g_fCvarAbilityCooldown[Ability_Shove] = cVar.FloatValue;
 	cVar.AddChangeHook(OnCvarChange_ShoveCooldown);
 
-	cVar = CreateConVar("l4d_si_ability_announce", "1", "0=Off, 1=Chat, 2=Center chat, 3=Hint.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cVar = CreateConVar("l4d_si_ability_announce", "1", "0=Off, 1=Chat, 2=Center chat, 3=Hint.", FCVAR_NOTIFY, true, 0.0, true, 3.0);
 	g_iCvarAnnounce = cVar.IntValue;
 	cVar.AddChangeHook(OnCvarChange_Announce);
 
@@ -146,7 +146,7 @@ public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 	if (!g_bCvarEnabled) return;
 
 	int slapper = CID(event.GetInt("attacker"));
-	if (!IsInfectedAndInGame(slapper) || !CanSlapAgain(slapper)) return;
+	if (!IsInfectedAndInGame(slapper) || !CanSlapAgain(slapper) || IsInfectedBussy(slapper)) return;
 
 	int target = CID(event.GetInt("userid"));
 	if (!IsSurvivorAndInGame(target)) return;
