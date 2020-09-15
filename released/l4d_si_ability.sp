@@ -1,4 +1,4 @@
-#define PLUGIN_VERSION "1.3"
+#define PLUGIN_VERSION "1.3.1"
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -17,7 +17,7 @@
 const int PAIN_SOUND_LEN = 54;
 static const float L4D_Z_MULT = 1.6;
 static const int SOUND_MIN = 1;
-static const int SOUND_MAX[sizeof(L4D2_LIB_SURVIVOR_CHARACTER)] = {7 ,4, 8, 6, 9, 7, 11, 5};
+static const int SOUND_MAX[SC_SIZE] = {7 ,4, 8, 6, 9, 7, 11, 5};
 static const char FORMAT_PAIN_SOUND[] = "player/survivor/voice/%s/hurtcritical0%d.wav";
 
 static const char FORMAT_MESSAGE_1C[] = "\x04%N\x01 was \x02%s\x01 by \x04%N\x01!";
@@ -123,7 +123,7 @@ public void OnPluginStart()
 public void OnMapStart()
 {
 	char painSound[PAIN_SOUND_LEN];
-	for (int i; i < sizeof(L4D2_LIB_SURVIVOR_CHARACTER); i++){
+	for (int i; i < SC_SIZE; i++){
 		for (int n = SOUND_MIN; n <= SOUND_MAX[i]; n++){
 			FormatEx(SZF(painSound), FORMAT_PAIN_SOUND, L4D2_LIB_SURVIVOR_CHARACTER[i], n);
 #if DEBUG
@@ -137,8 +137,8 @@ public void OnMapStart()
 
 public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
-	if (!g_bCvarEnabled) return;
-	g_fCooldownExpires[CID(event.GetInt("userid"))] = 0.0;
+	if (g_bCvarEnabled)
+		g_fCooldownExpires[CID(event.GetInt("userid"))] = 0.0;
 }
 
 public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
@@ -205,11 +205,11 @@ bool CanSlapAgain(int client)
 
 void PlaySurvivorPainSound(int target)
 {
-	int strIndex = GetCharStrIndex(target);
-	if (strIndex < 0) return;
+	int survIndex = GetSurvivorIndex(target);
+	if (survIndex == SC_INVALID) return;
 
 	char painSound[PAIN_SOUND_LEN];
-	FormatEx(SZF(painSound), FORMAT_PAIN_SOUND, L4D2_LIB_SURVIVOR_CHARACTER[strIndex], GetRandomInt(SOUND_MIN, SOUND_MAX[strIndex]));
+	FormatEx(SZF(painSound), FORMAT_PAIN_SOUND, L4D2_LIB_SURVIVOR_CHARACTER[survIndex], GetRandomInt(SOUND_MIN, SOUND_MAX[survIndex]));
 	EmitSoundToAll(painSound, target, _, SNDLEVEL_SCREAMING);
 }
 
@@ -318,11 +318,11 @@ public Action CommandCvar(int args)
 {
 	PrintToServer("l4d test");
 	for (int i = ZC_SMOKER; i <= ZC_HUNTER; i++){
-		PrintToServer("%d. fling %d, stagger %d, %s", i, g_iCvarFlags & (1 << i), g_iCvarShoveFlags  & (1 << i), L4D_LIB_INFECTED_CHARACTER_NAME[i]);
+		PrintToServer("%d. fling %d, stagger %d, %s", i, g_iCvarFlags[Ability_Shove] & (1 << i), g_iCvarFlags[Ability_Slap] & (1 << i), L4D_LIB_INFECTED_CHARACTER_NAME[i]);
 	}
 	PrintToServer("l4d2 test");
 	for (int i = ZC2_SMOKER; i <= ZC2_CHARGER; i++){
-		PrintToServer("%d. fling %d, stagger %d, %s", i, g_iCvarFlags & (1 << i), g_iCvarShoveFlags  & (1 << i), L4D2_LIB_INFECTED_CHARACTER_NAME[i]);
+		PrintToServer("%d. fling %d, stagger %d, %s", i, g_iCvarFlags[Ability_Shove] & (1 << i), g_iCvarFlags[Ability_Slap] & (1 << i), L4D2_LIB_INFECTED_CHARACTER_NAME[i]);
 	}
 }
 
