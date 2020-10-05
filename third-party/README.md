@@ -7,3 +7,5 @@
 - [l4d_tank_control](https://github.com/alexberriman/l4d2-plugins/tree/master/l4d_tank_control)  
   - Migration to left4dhooks
   - [l4d_tank_pass](https://forums.alliedmods.net/showthread.php?p=2712082) backward compatibility
+- [l4d2_bwa_teamspanel](https://forums.alliedmods.net/showthread.php?t=148874)  
+  - [r2comp_unscramble](https://github.com/raziEiL/r2comp-standalone/blob/master/sourcemod/scripting/r2comp_unscramble.sp) backward compatibility
