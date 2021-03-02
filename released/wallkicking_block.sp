@@ -1,4 +1,4 @@
-#define PLUGIN_VERSION "1.2"
+#define PLUGIN_VERSION "1.3"
 
 #pragma semicolon 1
 
@@ -24,11 +24,11 @@ static  Handle:g_hTrickTimer[MAXPLAYERS+1], Float:g_fCvarPounceCrouchDelay, bool
 
 public OnPluginStart()
 {
-	CreateConVar("stop_wallkicking_version", PLUGIN_VERSION, "Stop Wall Kicking plugin version", FCVAR_PLUGIN|FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_DONTRECORD);
+	CreateConVar("stop_wallkicking_version", PLUGIN_VERSION, "Stop Wall Kicking plugin version", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_DONTRECORD);
 
 	new Handle:hCvarPounceCrouchDelay = FindConVar("z_pounce_crouch_delay");
-	new Handle:hCvarPluginState = CreateConVar("stop_wallkicking_enable", "1", "If set, stops hunters from wallkicking", FCVAR_PLUGIN|FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	new Handle:hCvarPluginMode = CreateConVar("stop_wallkicking_mode", "0", "How the plugin prevents wall kicking. 0: block trick, 1: slay player", FCVAR_PLUGIN|FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	new Handle:hCvarPluginState = CreateConVar("stop_wallkicking_enable", "1", "If set, stops hunters from wallkicking", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	new Handle:hCvarPluginMode = CreateConVar("stop_wallkicking_mode", "0", "How the plugin prevents wall kicking. 0: block trick, 1: slay player", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	GetPounceCrouchDealyCvar(hCvarPounceCrouchDelay);
 	if (GetConVarBool(hCvarPluginState)) TooglePluginStateEvent(true);
@@ -86,7 +86,7 @@ public WK_ev_AbilityUse(Handle:event, const String:name[], bool:dontBroadcast)
 
 			ForcePlayerSuicide(client);
 
-			if (IsInfectedAlive(client)){
+			if (IsPlayerAlive(client)){
 
 				SetEntityMoveType(client, MOVETYPE_NONE);
 				CreateTimer(3.0, WK_t_GodModFix, client, TIMER_FLAG_NO_MAPCHANGE);
@@ -147,7 +147,7 @@ public Action:WK_t_StopTrickChecking(Handle:timer, any:client)
 
 bool:IsPlayerHunter(client)
 {
-	return GetClientTeam(client) == 3 && IsInfectedAlive(client) && GetPlayerClass(client) == ZC_HUNTER;
+	return GetClientTeam(client) == 3 && IsPlayerAlive(client) && GetPlayerClass(client) == ZC_HUNTER;
 }
 
 bool:IsAttemptingToTrick(client)
