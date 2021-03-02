@@ -1,7 +1,6 @@
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 
 #pragma semicolon 1
-#pragma newdecls required
 
 #include <sourcemod>
 
@@ -26,9 +25,9 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 
 public OnPluginStart()
 {
-	CreateConVar("sm_ncr_version", PLUGIN_VERSION, "Name Change Rules plugin version", FCVAR_PLUGIN|FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_DONTRECORD);
-	new Handle:hCvarSpectator = CreateConVar("sm_ncr_spectator", "1", "Blocks the name change message from being sent if player spectator.", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	new Handle:hCvarGagged = CreateConVar("sm_ncr_gagged", "1", "Blocks the name change message from being sent if player gagged.", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	CreateConVar("sm_ncr_version", PLUGIN_VERSION, "Name Change Rules plugin version", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_DONTRECORD);
+	new Handle:hCvarSpectator = CreateConVar("sm_ncr_spectator", "1", "Blocks the name change message from being sent if player spectator.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	new Handle:hCvarGagged = CreateConVar("sm_ncr_gagged", "1", "Blocks the name change message from being sent if player gagged.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	//AutoExecConfig(true, "sm_ncr"); /* If you need a cfg file you should uncomment this line // */
 
 	g_bCvarSpectator = GetConVarBool(hCvarSpectator);

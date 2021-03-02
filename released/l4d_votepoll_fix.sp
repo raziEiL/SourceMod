@@ -1,4 +1,4 @@
-#define PLUGIN_VERSION		"1.2"
+#define PLUGIN_VERSION		"1.3"
 
 #include <sourcemod>
 #include <sdktools>
@@ -27,7 +27,7 @@ static g_iVoteEntity = INVALID_ENT_REFERENCE, bool:g_bVotePoolFixTriggered, g_iV
 
 public OnPluginStart()
 {
-	CreateConVar("l4d_votepoll_fix_version", PLUGIN_VERSION, "Vote Poll Fix plugin version.", FCVAR_PLUGIN|FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_DONTRECORD);
+	CreateConVar("l4d_votepoll_fix_version", PLUGIN_VERSION, "Vote Poll Fix plugin version.", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_DONTRECORD);
 
 	decl String:sGameFolder[32];
 	GetGameFolderName(sGameFolder, 32);
